@@ -1,0 +1,122 @@
+[
+  {
+    "id": "PP-1792548820654",
+    "type": "Candidate release health-check failure",
+    "candidateVersion": "1.1.0",
+    "stableVersion": "1.0.0",
+    "status": "recovered",
+    "startedAt": "2026-10-21T02:13:40.656Z",
+    "events": [
+      {
+        "event": "Test started",
+        "details": "Starting candidate release with controlled health failure.",
+        "time": "2026-10-21T02:13:40.657Z"
+      },
+      {
+        "event": "Failure detected",
+        "details": "Candidate health check failed (HTTP unreachable).",
+        "time": "2026-10-21T02:13:53.558Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Candidate release failed its HTTP health gate.",
+        "time": "2026-10-21T02:13:53.559Z"
+      },
+      {
+        "event": "Rollback started",
+        "details": "Stopping candidate 1.1.0 and launching stable 1.0.0.",
+        "time": "2026-10-21T02:13:53.560Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable release 1.0.0 is running and /healthz returned HTTP 200.",
+        "time": "2026-10-21T02:13:56.154Z"
+      }
+    ],
+    "detectedAt": "2026-10-21T02:13:53.558Z",
+    "failedStatusCode": null,
+    "diagnosis": "Candidate release failed its HTTP health gate.",
+    "recoveredAt": "2026-10-21T02:13:56.154Z",
+    "restoredVersion": "1.0.0"
+  },
+  {
+    "id": "PP-1792673583484",
+    "type": "Candidate release health-check failure",
+    "candidateVersion": "1.1.0",
+    "stableVersion": "1.0.0",
+    "status": "recovered",
+    "startedAt": "2026-10-22T12:53:03.484Z",
+    "events": [
+      {
+        "event": "Test started",
+        "details": "Starting candidate release with controlled health failure.",
+        "time": "2026-10-22T12:53:03.484Z"
+      },
+      {
+        "event": "Failure detected",
+        "details": "Candidate health check failed (HTTP unreachable).",
+        "time": "2026-10-22T12:53:16.171Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Candidate release failed its HTTP health gate.",
+        "time": "2026-10-22T12:53:16.172Z"
+      },
+      {
+        "event": "Rollback started",
+        "details": "Stopping candidate 1.1.0 and launching stable 1.0.0.",
+        "time": "2026-10-22T12:53:16.173Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable release 1.0.0 is running and /healthz returned HTTP 200.",
+        "time": "2026-10-22T12:53:29.831Z"
+      }
+    ],
+    "detectedAt": "2026-10-22T12:53:16.171Z",
+    "failedStatusCode": null,
+    "diagnosis": "Candidate release failed its HTTP health gate.",
+    "recoveredAt": "2026-10-22T12:53:29.831Z",
+    "restoredVersion": "1.0.0"
+  },
+  {
+    "id": "PP-1792713982213",
+    "type": "Candidate release health-check failure",
+    "candidateVersion": "1.1.0",
+    "stableVersion": "1.0.0",
+    "status": "recovered",
+    "startedAt": "2026-10-23T00:06:22.213Z",
+    "events": [
+      {
+        "event": "Test started",
+        "details": "Starting candidate release with controlled health failure.",
+        "time": "2026-10-23T00:06:22.214Z"
+      },
+      {
+        "event": "Failure detected",
+        "details": "Candidate health check failed (HTTP unreachable).",
+        "time": "2026-10-23T00:06:35.087Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Candidate release failed its HTTP health gate.",
+        "time": "2026-10-23T00:06:35.088Z"
+      },
+      {
+        "event": "Rollback started",
+        "details": "Stopping candidate 1.1.0 and launching stable 1.0.0.",
+        "time": "2026-10-23T00:06:35.088Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable release 1.0.0 is running and /healthz returned HTTP 200.",
+        "time": "2026-10-23T00:06:47.756Z"
+      }
+    ],
+    "detectedAt": "2026-10-23T00:06:35.086Z",
+    "failedStatusCode": null,
+    "diagnosis": "Candidate release failed its HTTP health gate.",
+    "recoveredAt": "2026-10-23T00:06:47.755Z",
+    "restoredVersion": "1.0.0"
+  }
+]

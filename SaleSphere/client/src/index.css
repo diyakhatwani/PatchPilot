@@ -1,0 +1,29 @@
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #18263d;
+  background: #f5f7fb;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+
+button, input {
+  font: inherit;
+}
+
+button:focus-visible, input:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 2px;
+}

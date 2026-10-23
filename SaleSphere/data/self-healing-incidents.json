@@ -1,0 +1,1027 @@
+[
+  {
+    "id": "VERSION-1792636303916",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-22T02:31:43.916Z",
+    "detectedAt": "2026-10-22T02:31:44.711Z",
+    "diagnosedAt": "2026-10-22T02:31:45.721Z",
+    "actionAt": "2026-10-22T02:31:46.733Z",
+    "recoveredAt": "2026-10-22T02:31:47.749Z",
+    "detectionTimeMs": 795,
+    "recoveryTimeMs": 3833,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-22T02:31:43.920Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Version health gate failed for the candidate release.",
+        "timestamp": "2026-10-22T02:31:44.712Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Candidate release is marked unhealthy; the previous stable release is available.",
+        "timestamp": "2026-10-22T02:31:45.722Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Automatically restored release 1.0.0.",
+        "timestamp": "2026-10-22T02:31:46.734Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and version health check passed.",
+        "timestamp": "2026-10-22T02:31:47.749Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792649839764",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-22T06:17:19.764Z",
+    "detectedAt": "2026-10-22T06:17:19.771Z",
+    "diagnosedAt": "2026-10-22T06:17:20.776Z",
+    "actionAt": "2026-10-22T06:17:21.781Z",
+    "recoveredAt": "2026-10-22T06:17:22.796Z",
+    "detectionTimeMs": 7,
+    "recoveryTimeMs": 3033,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-22T06:17:19.765Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-22T06:17:19.771Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-22T06:17:20.776Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-22T06:17:21.781Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-22T06:17:22.797Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792722430278",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T02:27:10.277Z",
+    "detectedAt": "2026-10-23T02:27:10.861Z",
+    "diagnosedAt": "2026-10-23T02:27:11.871Z",
+    "actionAt": "2026-10-23T02:27:12.880Z",
+    "recoveredAt": "2026-10-23T02:27:13.891Z",
+    "detectionTimeMs": 584,
+    "recoveryTimeMs": 3614,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T02:27:10.278Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T02:27:10.871Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T02:27:11.872Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T02:27:12.880Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T02:27:13.891Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792733813519",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T05:36:53.519Z",
+    "detectedAt": "2026-10-23T05:36:53.935Z",
+    "diagnosedAt": "2026-10-23T05:36:54.947Z",
+    "actionAt": "2026-10-23T05:36:55.960Z",
+    "recoveredAt": "2026-10-23T05:36:56.962Z",
+    "detectionTimeMs": 416,
+    "recoveryTimeMs": 3443,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T05:36:53.519Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T05:36:53.935Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T05:36:54.948Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T05:36:55.960Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T05:36:56.962Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792733834337",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T05:37:14.337Z",
+    "detectedAt": "2026-10-23T05:37:15.102Z",
+    "diagnosedAt": "2026-10-23T05:37:16.115Z",
+    "actionAt": "2026-10-23T05:37:17.118Z",
+    "recoveredAt": "2026-10-23T05:37:18.129Z",
+    "detectionTimeMs": 765,
+    "recoveryTimeMs": 3792,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T05:37:14.337Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T05:37:15.102Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T05:37:16.115Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T05:37:17.118Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T05:37:18.129Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792733858022",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T05:37:38.022Z",
+    "detectedAt": "2026-10-23T05:37:38.264Z",
+    "diagnosedAt": "2026-10-23T05:37:39.277Z",
+    "actionAt": "2026-10-23T05:37:40.292Z",
+    "recoveredAt": "2026-10-23T05:37:41.306Z",
+    "detectionTimeMs": 242,
+    "recoveryTimeMs": 3284,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T05:37:38.030Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T05:37:38.264Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T05:37:39.277Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T05:37:40.292Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T05:37:41.306Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792736599071",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T06:23:19.071Z",
+    "detectedAt": "2026-10-23T06:23:19.589Z",
+    "diagnosedAt": "2026-10-23T06:23:20.601Z",
+    "actionAt": "2026-10-23T06:23:21.614Z",
+    "recoveredAt": "2026-10-23T06:23:22.614Z",
+    "detectionTimeMs": 518,
+    "recoveryTimeMs": 3543,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T06:23:19.072Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T06:23:19.589Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T06:23:20.601Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T06:23:21.614Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T06:23:22.614Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792736946582",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T06:29:06.582Z",
+    "detectedAt": "2026-10-23T06:29:06.785Z",
+    "diagnosedAt": "2026-10-23T06:29:07.789Z",
+    "actionAt": "2026-10-23T06:29:08.804Z",
+    "recoveredAt": "2026-10-23T06:29:09.822Z",
+    "detectionTimeMs": 203,
+    "recoveryTimeMs": 3240,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T06:29:06.583Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T06:29:06.785Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T06:29:07.790Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T06:29:08.804Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T06:29:09.822Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792740574677",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T07:29:34.677Z",
+    "detectedAt": "2026-10-23T07:29:35.677Z",
+    "diagnosedAt": "2026-10-23T07:29:36.681Z",
+    "actionAt": "2026-10-23T07:29:37.695Z",
+    "recoveredAt": "2026-10-23T07:29:38.709Z",
+    "detectionTimeMs": 1000,
+    "recoveryTimeMs": 4033,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T07:29:34.677Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T07:29:35.677Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T07:29:36.681Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T07:29:37.695Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T07:29:38.710Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792740739583",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T07:32:19.583Z",
+    "detectedAt": "2026-10-23T07:32:19.822Z",
+    "diagnosedAt": "2026-10-23T07:32:20.832Z",
+    "actionAt": "2026-10-23T07:32:21.833Z",
+    "recoveredAt": "2026-10-23T07:32:22.844Z",
+    "detectionTimeMs": 239,
+    "recoveryTimeMs": 3261,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T07:32:19.583Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T07:32:19.822Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T07:32:20.832Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T07:32:21.833Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T07:32:22.844Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792740770953",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T07:32:50.953Z",
+    "detectedAt": "2026-10-23T07:32:51.134Z",
+    "diagnosedAt": "2026-10-23T07:32:52.148Z",
+    "actionAt": "2026-10-23T07:32:53.160Z",
+    "recoveredAt": "2026-10-23T07:32:54.162Z",
+    "detectionTimeMs": 181,
+    "recoveryTimeMs": 3209,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T07:32:50.953Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T07:32:51.134Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T07:32:52.148Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T07:32:53.160Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T07:32:54.162Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792740848489",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T07:34:08.488Z",
+    "detectedAt": "2026-10-23T07:34:08.824Z",
+    "diagnosedAt": "2026-10-23T07:34:09.832Z",
+    "actionAt": "2026-10-23T07:34:10.842Z",
+    "recoveredAt": "2026-10-23T07:34:11.852Z",
+    "detectionTimeMs": 336,
+    "recoveryTimeMs": 3364,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T07:34:08.489Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T07:34:08.824Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T07:34:09.832Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T07:34:10.842Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T07:34:11.852Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792740911530",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T07:35:11.530Z",
+    "detectedAt": "2026-10-23T07:35:12.305Z",
+    "diagnosedAt": "2026-10-23T07:35:13.319Z",
+    "actionAt": "2026-10-23T07:35:14.331Z",
+    "recoveredAt": "2026-10-23T07:35:15.332Z",
+    "detectionTimeMs": 775,
+    "recoveryTimeMs": 3802,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T07:35:11.530Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T07:35:12.305Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T07:35:13.319Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T07:35:14.331Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T07:35:15.332Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792741607232",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T07:46:47.232Z",
+    "detectedAt": "2026-10-23T07:46:47.526Z",
+    "diagnosedAt": "2026-10-23T07:46:48.539Z",
+    "actionAt": "2026-10-23T07:46:49.554Z",
+    "recoveredAt": "2026-10-23T07:46:50.565Z",
+    "detectionTimeMs": 294,
+    "recoveryTimeMs": 3333,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T07:46:47.233Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T07:46:47.526Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T07:46:48.539Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T07:46:49.554Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T07:46:50.565Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792741950820",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T07:52:30.820Z",
+    "detectedAt": "2026-10-23T07:52:31.255Z",
+    "diagnosedAt": "2026-10-23T07:52:32.266Z",
+    "actionAt": "2026-10-23T07:52:33.277Z",
+    "recoveredAt": "2026-10-23T07:52:34.289Z",
+    "detectionTimeMs": 435,
+    "recoveryTimeMs": 3469,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T07:52:30.820Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T07:52:31.255Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T07:52:32.266Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T07:52:33.277Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T07:52:34.289Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792741991963",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T07:53:11.963Z",
+    "detectedAt": "2026-10-23T07:53:12.672Z",
+    "diagnosedAt": "2026-10-23T07:53:13.684Z",
+    "actionAt": "2026-10-23T07:53:14.694Z",
+    "recoveredAt": "2026-10-23T07:53:15.693Z",
+    "detectionTimeMs": 709,
+    "recoveryTimeMs": 3730,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T07:53:11.963Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T07:53:12.672Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T07:53:13.684Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T07:53:14.694Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T07:53:15.693Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792742056447",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T07:54:16.447Z",
+    "detectedAt": "2026-10-23T07:54:16.599Z",
+    "diagnosedAt": "2026-10-23T07:54:17.609Z",
+    "actionAt": "2026-10-23T07:54:18.619Z",
+    "recoveredAt": "2026-10-23T07:54:19.627Z",
+    "detectionTimeMs": 152,
+    "recoveryTimeMs": 3180,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T07:54:16.447Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T07:54:16.599Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T07:54:17.609Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T07:54:18.619Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T07:54:19.627Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792742394009",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T07:59:54.009Z",
+    "detectedAt": "2026-10-23T07:59:54.712Z",
+    "diagnosedAt": "2026-10-23T07:59:55.716Z",
+    "actionAt": "2026-10-23T07:59:56.728Z",
+    "recoveredAt": "2026-10-23T07:59:57.732Z",
+    "detectionTimeMs": 703,
+    "recoveryTimeMs": 3723,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T07:59:54.009Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T07:59:54.712Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T07:59:55.716Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T07:59:56.728Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T07:59:57.732Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792743401761",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T08:16:41.761Z",
+    "detectedAt": "2026-10-23T08:16:41.882Z",
+    "diagnosedAt": "2026-10-23T08:16:42.892Z",
+    "actionAt": "2026-10-23T08:16:43.905Z",
+    "recoveredAt": "2026-10-23T08:16:44.913Z",
+    "detectionTimeMs": 121,
+    "recoveryTimeMs": 3152,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T08:16:41.761Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T08:16:41.882Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T08:16:42.892Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T08:16:43.905Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T08:16:44.913Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792743555535",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T08:19:15.535Z",
+    "detectedAt": "2026-10-23T08:19:16.300Z",
+    "diagnosedAt": "2026-10-23T08:19:17.313Z",
+    "actionAt": "2026-10-23T08:19:18.313Z",
+    "recoveredAt": "2026-10-23T08:19:19.315Z",
+    "detectionTimeMs": 765,
+    "recoveryTimeMs": 3780,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T08:19:15.535Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T08:19:16.300Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T08:19:17.313Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T08:19:18.313Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T08:19:19.315Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792743721129",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T08:22:01.129Z",
+    "detectedAt": "2026-10-23T08:22:01.915Z",
+    "diagnosedAt": "2026-10-23T08:22:02.928Z",
+    "actionAt": "2026-10-23T08:22:03.931Z",
+    "recoveredAt": "2026-10-23T08:22:04.947Z",
+    "detectionTimeMs": 786,
+    "recoveryTimeMs": 3818,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T08:22:01.129Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T08:22:01.915Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T08:22:02.929Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T08:22:03.931Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T08:22:04.947Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792743767013",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T08:22:47.013Z",
+    "detectedAt": "2026-10-23T08:22:47.288Z",
+    "diagnosedAt": "2026-10-23T08:22:48.294Z",
+    "actionAt": "2026-10-23T08:22:49.300Z",
+    "recoveredAt": "2026-10-23T08:22:50.311Z",
+    "detectionTimeMs": 275,
+    "recoveryTimeMs": 3298,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T08:22:47.013Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T08:22:47.288Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T08:22:48.294Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T08:22:49.300Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T08:22:50.311Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792744125462",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T08:28:45.462Z",
+    "detectedAt": "2026-10-23T08:28:46.172Z",
+    "diagnosedAt": "2026-10-23T08:28:47.182Z",
+    "actionAt": "2026-10-23T08:28:48.190Z",
+    "recoveredAt": "2026-10-23T08:28:49.202Z",
+    "detectionTimeMs": 710,
+    "recoveryTimeMs": 3740,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T08:28:45.462Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T08:28:46.172Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T08:28:47.182Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T08:28:48.190Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T08:28:49.202Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792745632863",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T08:53:52.863Z",
+    "detectedAt": "2026-10-23T08:53:53.170Z",
+    "diagnosedAt": "2026-10-23T08:53:54.172Z",
+    "actionAt": "2026-10-23T08:53:55.174Z",
+    "recoveredAt": "2026-10-23T08:53:56.175Z",
+    "detectionTimeMs": 307,
+    "recoveryTimeMs": 3312,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T08:53:52.863Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T08:53:53.170Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T08:53:54.172Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T08:53:55.174Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T08:53:56.175Z"
+      }
+    ]
+  },
+  {
+    "id": "VERSION-1792748765742",
+    "type": "Automatic Version Rollback",
+    "status": "recovered",
+    "previousVersion": "1.0.0",
+    "failedVersion": "2.0.0-bad",
+    "startedAt": "2026-10-23T09:46:05.742Z",
+    "detectedAt": "2026-10-23T09:46:06.279Z",
+    "diagnosedAt": "2026-10-23T09:46:07.290Z",
+    "actionAt": "2026-10-23T09:46:08.302Z",
+    "recoveredAt": "2026-10-23T09:46:09.313Z",
+    "detectionTimeMs": 537,
+    "recoveryTimeMs": 3571,
+    "events": [
+      {
+        "event": "Injected",
+        "details": "Controlled bad release selected for the resilience test.",
+        "timestamp": "2026-10-23T09:46:05.742Z"
+      },
+      {
+        "event": "Detected",
+        "details": "Candidate release failed the version health gate.",
+        "timestamp": "2026-10-23T09:46:06.279Z"
+      },
+      {
+        "event": "Diagnosed",
+        "details": "Unhealthy candidate identified. Previous stable release is available.",
+        "timestamp": "2026-10-23T09:46:07.290Z"
+      },
+      {
+        "event": "Action taken",
+        "details": "Restored the stable release 1.0.0 in the demo version manager.",
+        "timestamp": "2026-10-23T09:46:08.302Z"
+      },
+      {
+        "event": "Recovered",
+        "details": "Stable version restored and database readiness check passed.",
+        "timestamp": "2026-10-23T09:46:09.313Z"
+      }
+    ]
+  }
+]

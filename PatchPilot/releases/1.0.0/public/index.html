@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SaleSphere | Sales Management</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+:root{color-scheme:light}
+body{background:#f5f7fb;color:#18263d}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer;border:0;border-radius:8px;padding:10px 14px;font-weight:600}
+button:disabled{opacity:.6;cursor:not-allowed}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:245px;background:#10213a;color:white;padding:27px 16px;flex-shrink:0;display:flex;flex-direction:column}
+.logo{font-size:23px;font-weight:800;letter-spacing:-.5px;padding:0 10px 30px}
+.logo span{color:#60a5fa}
+.nav-label{font-size:10px;color:#8fa4c2;font-weight:700;letter-spacing:1.5px;padding:12px}
+.nav-item{display:flex;align-items:center;gap:12px;color:#c5d2e4;padding:13px 12px;margin:3px 0;border-radius:9px;cursor:pointer;font-size:14px;transition:.2s}
+.nav-item:hover,.nav-item.active{background:#1d3b60;color:#fff}
+.nav-item.active{box-shadow:inset 3px 0 #60a5fa}
+.nav-icon{width:21px;text-align:center;font-size:17px}
+.sidebar-bottom{margin-top:auto;border-top:1px solid #2a3e59;padding:18px 10px 0;color:#b9c8dc;font-size:12px;line-height:1.8}
+.main{flex:1;min-width:0;padding:30px 34px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:28px;flex-wrap:wrap}
+h1{font-size:27px;letter-spacing:-.7px;margin-bottom:7px}
+.subtitle{color:#718096;font-size:13px;line-height:1.6}
+.top-actions{display:flex;align-items:center;gap:10px}
+.primary{background:#2166d1;color:#fff}
+.primary:hover{background:#1956b5}
+.secondary{background:#e9eef6;color:#33445c}
+.danger{background:#fee8e7;color:#b42318}
+.small{padding:7px 10px;font-size:12px}
+.page{display:none}
+.page.active{display:block}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:17px;margin-bottom:22px}
+.stat-card,.panel{background:#fff;border:1px solid #e6ebf2;border-radius:13px;box-shadow:0 3px 12px #172b4d05}
+.stat-card{padding:21px;min-width:0}
+.stat-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px}
+.stat-label{font-size:12px;color:#718096;font-weight:600}
+.stat-icon{width:37px;height:37px;border-radius:10px;display:grid;place-items:center;background:#eaf2ff;color:#2166d1;font-size:18px}
+.stat-value{font-size:29px;font-weight:750;letter-spacing:-.7px;margin-bottom:7px;overflow-wrap:anywhere}
+.stat-note{font-size:11px;color:#718096}
+.panel{padding:22px;margin-bottom:22px;min-width:0}
+.panel-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.panel-heading h2{font-size:16px}
+.panel-heading p{font-size:12px;color:#718096;margin-top:5px}
+.dashboard-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(270px,1fr);gap:20px}
+.pipeline-bars{display:grid;gap:18px}
+.pipeline-row{display:grid;grid-template-columns:105px minmax(0,1fr) 30px;gap:10px;align-items:center;font-size:12px}
+.pipeline-label{color:#53647a}
+.bar-track{height:10px;border-radius:20px;background:#edf1f7;overflow:hidden}
+.bar{height:100%;width:0;border-radius:20px;transition:width .35s}
+.bar-New{background:#3b82f6}
+.bar-Contacted{background:#e7ad37}
+.bar-Negotiation{background:#8b5cf6}
+.bar-Won{background:#22a06b}
+.bar-Lost{background:#e35d6a}
+.pipeline-count{text-align:right;font-weight:700}
+.activity-list{display:grid;gap:0}
+.activity-item{padding:13px 0;border-bottom:1px solid #edf0f5;display:flex;gap:12px;align-items:flex-start}
+.activity-item:last-child{border-bottom:0}
+.avatar{height:35px;width:35px;border-radius:10px;background:#e8efff;color:#2259b3;display:grid;place-items:center;font-size:12px;font-weight:700;flex-shrink:0}
+.activity-name{font-size:13px;font-weight:700;margin-bottom:5px;overflow-wrap:anywhere}
+.activity-meta{font-size:11px;color:#718096;line-height:1.6;overflow-wrap:anywhere}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.toolbar input{flex:1;min-width:190px}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid #d8e0eb;border-radius:8px;background:#fff;color:#24344d;outline:none;font-size:13px}
+textarea{resize:vertical;min-height:90px}
+input:focus,select:focus,textarea:focus{border-color:#4184e8;box-shadow:0 0 0 3px #4184e81a}
+.toolbar select{width:175px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:760px}
+th,td{text-align:left;padding:14px 12px;border-bottom:1px solid #edf0f5;font-size:12px}
+th{background:#f8faff;color:#718096;font-weight:700;white-space:nowrap}
+td{vertical-align:middle}
+.customer-name{font-weight:700;color:#20334e;margin-bottom:5px}
+.customer-email{font-size:11px;color:#718096;overflow-wrap:anywhere}
+.status{display:inline-block;padding:6px 9px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.status-New{background:#e4efff;color:#245db6}
+.status-Contacted{background:#fff2ce;color:#95620b}
+.status-Negotiation{background:#efe8ff;color:#7041b7}
+.status-Won{background:#dff7e9;color:#167647}
+.status-Lost{background:#ffe5e5;color:#b42318}
+.follow-status{display:inline-block;padding:5px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.follow-pending{background:#e4efff;color:#245db6}
+.follow-overdue{background:#ffe5e5;color:#b42318}
+.follow-today{background:#fff2ce;color:#95620b}
+.follow-done{background:#dff7e9;color:#167647}
+.actions{display:flex;gap:6px}
+.edit-btn{background:#e6efff;color:#245db6}
+.delete-btn{background:#ffe8e7;color:#b42318}
+.empty{padding:28px;text-align:center;color:#718096}
+.message{display:none;padding:13px 15px;border-radius:9px;margin-bottom:18px;font-size:13px;line-height:1.5}
+.message.success{display:block;background:#e0f7e9;color:#176b42}
+.message.error{display:block;background:#ffebeb;color:#a51d2d}
+.message.info{display:block;background:#e8f1ff;color:#1f55a5}
+.form-panel{display:none}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}
+.field label{display:block;font-size:12px;font-weight:700;margin-bottom:8px}
+.field.full{grid-column:1/-1}
+.form-actions{display:flex;gap:10px;margin-top:20px}
+.health-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.health-card{border:1px solid #e5eaf2;border-radius:11px;padding:19px;display:flex;gap:13px;align-items:flex-start}
+.health-symbol{width:38px;height:38px;display:grid;place-items:center;background:#edf3ff;color:#235eb8;border-radius:10px;font-size:18px;flex-shrink:0}
+.health-title{font-size:14px;font-weight:700;margin-bottom:7px}
+.health-status{font-size:12px;color:#718096;line-height:1.6;overflow-wrap:anywhere}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#94a3b8;margin-right:6px}
+.dot.ok{background:#20a464}
+.dot.bad{background:#df4141}
+.dot.warn{background:#e4a323}
+.version-number{font-size:34px;font-weight:800;letter-spacing:-1px;margin:15px 0 8px}
+.version-note{font-size:13px;color:#718096;line-height:1.7}
+.notice{padding:15px;background:#f3f6fb;border-radius:9px;font-size:12px;line-height:1.7;color:#586b83;margin-top:16px}
+.footer{text-align:center;color:#8290a3;font-size:11px;padding:10px}
+
+/* Client Profile */
+.customer-link {
+    padding: 0;
+    background: transparent;
+    color: #20334e;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.customer-link:hover {
+    color: #2166d1;
+    text-decoration: underline;
+}
+
+.profile-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(9, 22, 42, 0.6);
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.profile-overlay.open {
+    display: block;
+}
+
+.profile-modal {
+    width: 100%;
+    max-width: 850px;
+    margin: 20px auto;
+    background: #f5f7fb;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px #0003;
+}
+
+.profile-header {
+    background: #10213a;
+    color: white;
+    padding: 25px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.profile-header h2 {
+    font-size: 23px;
+    margin-bottom: 7px;
+    overflow-wrap: anywhere;
+}
+
+.profile-header p {
+    color: #c5d2e4;
+    font-size: 13px;
+}
+
+.profile-close {
+    background: #29415f;
+    color: white;
+    font-size: 20px;
+    padding: 6px 12px;
+}
+
+.profile-body {
+    padding: 22px;
+}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 13px;
+    margin-bottom: 20px;
+}
+
+.profile-field {
+    background: white;
+    border: 1px solid #e6ebf2;
+    border-radius: 10px;
+    padding: 15px;
+    min-width: 0;
+}
+
+.profile-field span {
+    display: block;
+    color: #718096;
+    font-size: 11px;
+    margin-bottom: 8px;
+}
+
+.profile-field strong {
+    display: block;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+    line-height: 1.6;
+}
+
+.profile-section {
+    background: white;
+    border: 1px solid #e6ebf2;
+    border-radius: 12px;
+    padding: 19px;
+    margin-bottom: 18px;
+}
+
+.profile-section h3 {
+    font-size: 15px;
+    margin-bottom: 15px;
+}
+
+.activity-timeline {
+    display: grid;
+    gap: 12px;
+}
+
+.activity-record {
+    border-left: 3px solid #2166d1;
+    padding: 4px 0 5px 14px;
+}
+
+.activity-record-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 7px;
+}
+
+.activity-record-type {
+    color: #2166d1;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.activity-record-date {
+    color: #718096;
+    font-size: 11px;
+}
+
+.activity-record-description {
+    color: #33445c;
+    font-size: 13px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.activity-form {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr);
+    gap: 12px;
+}
+
+.activity-form textarea {
+    grid-column: 1 / -1;
+    min-height: 80px;
+}
+
+.activity-form button {
+    justify-self: start;
+}
+
+@media(max-width:600px) {
+    .profile-overlay {
+        padding: 8px;
+    }
+
+    .profile-modal {
+        margin: 8px auto;
+    }
+
+    .profile-header,
+    .profile-body {
+        padding: 17px;
+    }
+
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .activity-form {
+        grid-template-columns: 1fr;
+    }
+
+    .activity-form textarea {
+        grid-column: auto;
+    }
+}
+@media(max-width:1100px){
+.stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+.dashboard-grid{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+.layout{display:block}
+.sidebar{width:100%;padding:18px}
+.logo{padding-bottom:14px}
+.nav-label{display:none}
+.nav-item{display:inline-flex;padding:10px;margin:3px 2px;font-size:12px}
+.sidebar-bottom{display:none}
+.main{padding:19px 14px}
+.topbar{margin-bottom:20px}
+h1{font-size:23px}
+.stat-card{padding:16px}
+.stat-value{font-size:25px}
+.panel{padding:15px}
+.health-grid{grid-template-columns:1fr}
+}
+@media(max-width:430px){
+.stats{gap:10px}
+.stat-card{padding:13px}
+.stat-label{font-size:11px}
+.stat-value{font-size:23px}
+.stat-icon{width:31px;height:31px}
+.form-grid{grid-template-columns:1fr}
+.field.full{grid-column:auto}
+.top-actions{width:100%}
+}
+
+
+/* Smart Lead Priority */
+.priority-badge {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.priority-hot {
+    background: #fee2e2;
+    color: #b42318;
+}
+
+.priority-warm {
+    background: #fff2ce;
+    color: #95620b;
+}
+
+.priority-cold {
+    background: #e4efff;
+    color: #245db6;
+}
+
+.priority-closed {
+    background: #e9eef6;
+    color: #53647a;
+}
+
+/* Interactive Dashboard Cards */
+.stat-card {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px #172b4d12;
+}
+
+.stat-card:focus-visible {
+    outline: 3px solid #60a5fa;
+    outline-offset: 3px;
+}
+
+.stat-note {
+    line-height: 1.6;
+}
+
+
+</style>
+</head>
+
+<body>
+<div class="layout">
+<aside class="sidebar">
+    <div class="logo">Sale<span>Sphere</span></div>
+    <div class="nav-label">WORKSPACE</div>
+    <div class="nav-item active" data-page="dashboard"><span class="nav-icon">▦</span>Dashboard</div>
+    <div class="nav-item" data-page="leads"><span class="nav-icon">♙</span>Customer Leads</div>
+    <div class="nav-item" data-page="followups"><span class="nav-icon">▣</span>Follow-ups</div>
+    <div class="nav-item" data-page="pipeline"><span class="nav-icon">▤</span>Sales Pipeline</div>
+    <div class="nav-label">SYSTEM</div>
+    <div class="nav-item" data-page="health"><span class="nav-icon">♥</span>System Health</div>
+    <div class="nav-item" data-page="versions"><span class="nav-icon">↻</span>Version Manager</div>
+    <div class="sidebar-bottom">
+        <strong>SaleSphere CRM</strong><br>
+        Sales management workspace
+    </div>
+</aside>
+
+<main class="main">
+<header class="topbar">
+    <div>
+        <h1 id="pageTitle">Dashboard Overview</h1>
+        <p class="subtitle" id="pageSubtitle">Monitor your sales activity and customer leads.</p>
+    </div>
+    <div class="top-actions">
+        <button class="secondary" onclick="loadLeads()">↻ Refresh</button>
+        <button class="primary" onclick="openAddForm()">+ Add New Lead</button>
+    </div>
+</header>
+
+<div id="message" class="message" role="status" aria-live="polite"></div>
+
+<section class="page active" id="page-dashboard">
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-top"><span class="stat-label">Total Leads</span><span class="stat-icon">♙</span></div>
+            <div class="stat-value" id="totalLeads">—</div>
+            <div class="stat-note">All recorded customers</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-top"><span class="stat-label">New Leads</span><span class="stat-icon">✦</span></div>
+            <div class="stat-value" id="newLeads">—</div>
+            <div class="stat-note">Awaiting first contact</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-top"><span class="stat-label">Deals Won</span><span class="stat-icon">✓</span></div>
+            <div class="stat-value" id="wonLeads">—</div>
+            <div class="stat-note">Successfully converted leads</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-top"><span class="stat-label">Conversion Rate</span><span class="stat-icon">↗</span></div>
+            <div class="stat-value" id="conversionRate">—</div>
+            <div class="stat-note">Won leads ÷ total leads</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-top"><span class="stat-label">Pending Follow-ups</span><span class="stat-icon">◷</span></div>
+            <div class="stat-value" id="pendingFollowUps">0</div>
+            <div class="stat-note">Today and future follow-ups</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-top"><span class="stat-label">Overdue Follow-ups</span><span class="stat-icon">!</span></div>
+            <div class="stat-value" id="overdueFollowUps">0</div>
+            <div class="stat-note">Follow-ups past their due date</div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <section class="panel">
+            <div class="panel-heading">
+                <div><h2>Sales Pipeline</h2><p>Distribution of your current leads</p></div>
+                <button class="secondary small" onclick="showPage('pipeline')">View details</button>
+            </div>
+            <div class="pipeline-bars" id="dashboardPipeline">
+                <div class="empty">Loading sales data...</div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-heading">
+                <div><h2>Recent Leads</h2><p>Latest customer records</p></div>
+                <button class="secondary small" onclick="showPage('leads')">View all</button>
+            </div>
+            <div class="activity-list" id="recentLeads">
+                <div class="empty">Loading recent leads...</div>
+            </div>
+        </section>
+    </div>
+
+    <section class="panel">
+        <div class="panel-heading">
+            <div><h2>Follow-up Overview</h2><p>Customers who need attention</p></div>
+            <button class="secondary small" onclick="showPage('followups')">View all follow-ups</button>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Customer</th><th>Phone</th><th>Follow-up Date</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody id="dashboardFollowUps"><tr><td colspan="5" class="empty">Loading follow-ups...</td></tr></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-heading">
+            <div><h2>System Snapshot</h2><p>Live checks from the SaleSphere backend</p></div>
+            <button class="secondary small" onclick="checkHealth()">Check now</button>
+        </div>
+        <div class="health-grid">
+            <div class="health-card">
+                <div class="health-symbol">◉</div>
+                <div><div class="health-title">Application</div><div class="health-status" id="dashboardAppHealth">Checking...</div></div>
+            </div>
+            <div class="health-card">
+                <div class="health-symbol">▤</div>
+                <div><div class="health-title">Database</div><div class="health-status" id="dashboardDbHealth">Checking...</div></div>
+            </div>
+        </div>
+    </section>
+</section>
+
+<section class="page" id="page-leads">
+    <section class="panel form-panel" id="formPanel">
+        <div class="panel-heading">
+            <div><h2 id="formTitle">Add New Lead</h2><p>Enter customer and follow-up details.</p></div>
+        </div>
+        <form id="leadForm">
+            <div class="form-grid">
+                <div class="field"><label for="customerName">Customer Name *</label><input id="customerName" name="customerName" placeholder="Enter customer name" required></div>
+                <div class="field"><label for="companyName">Company Name *</label><input id="companyName" name="companyName" placeholder="Enter company name" required></div>
+                <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" placeholder="Enter email address"></div>
+                <div class="field"><label for="phone">Phone Number</label><input id="phone" name="phone" type="tel" placeholder="Enter phone number"></div>
+                <div class="field"><label for="interest">Interest *</label><input id="interest" name="interest" placeholder="e.g. Software, Service" required></div>
+                <div class="field"><label for="statusInput">Lead Status</label><select id="statusInput" name="status"><option>New</option><option>Contacted</option><option>Negotiation</option><option>Won</option><option>Lost</option></select></div>
+                <div class="field"><label for="followUpDate">Follow-up Date</label><input id="followUpDate" name="followUpDate" type="date"></div>
+                <div class="field full"><label for="notes">Notes</label><textarea id="notes" name="notes" placeholder="Add call details, customer requirements or next steps..."></textarea></div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="primary" id="saveBtn">Save Lead</button>
+                <button type="button" class="secondary" onclick="closeForm()">Cancel</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="panel">
+        <div class="panel-heading"><div><h2>Customer Leads</h2><p>Search, filter, update or remove customer records.</p></div></div>
+        <div class="toolbar">
+            <input type="search" id="searchInput" placeholder="Search name, company, email, phone or interest...">
+            <select id="statusFilter">
+                <option value="All">All Statuses</option><option>New</option><option>Contacted</option><option>Negotiation</option><option>Won</option><option>Lost</option>
+            </select>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Customer</th><th>Company</th><th>Interest</th><th>Status</th><th>Follow-up</th><th>Actions</th></tr></thead>
+                <tbody id="leadsTable"><tr><td colspan="6" class="empty">Loading leads...</td></tr></tbody>
+            </table>
+        </div>
+    </section>
+</section>
+
+<section class="page" id="page-followups">
+    <section class="panel">
+        <div class="panel-heading">
+            <div><h2>Follow-up Management</h2><p>Track pending, overdue and completed sales follow-ups.</p></div>
+            <button class="primary" onclick="openAddForm()">+ Add Lead</button>
+        </div>
+        <div class="toolbar">
+            <input type="search" id="followUpSearch" placeholder="Search customer, phone, company or notes...">
+            <select id="followUpFilter">
+                <option value="All">All Follow-ups</option>
+                <option value="Overdue">Overdue</option>
+                <option value="Today">Due Today</option>
+                <option value="Upcoming">Upcoming</option>
+                <option value="NoDate">No Date Set</option>
+            </select>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Customer</th><th>Company</th><th>Phone</th><th>Follow-up Date</th><th>Notes</th><th>Follow-up Status</th><th>Action</th></tr></thead>
+                <tbody id="followUpsTable"><tr><td colspan="7" class="empty">Loading follow-ups...</td></tr></tbody>
+            </table>
+        </div>
+    </section>
+</section>
+
+<section class="page" id="page-pipeline">
+    <section class="panel">
+        <div class="panel-heading"><div><h2>Sales Pipeline</h2><p>See how leads are distributed across each stage.</p></div><button class="secondary" onclick="loadLeads()">Refresh data</button></div>
+        <div class="pipeline-bars" id="fullPipeline"><div class="empty">Loading pipeline...</div></div>
+    </section>
+    <section class="panel">
+        <div class="panel-heading"><div><h2>Lead Records</h2><p>Choose a lead to update its current sales stage.</p></div><button class="primary" onclick="showPage('leads');openAddForm()">+ Add Lead</button></div>
+        <div class="table-wrap"><table><thead><tr><th>Customer</th><th>Company</th><th>Interest</th><th>Status</th><th>Action</th></tr></thead><tbody id="pipelineTable"><tr><td colspan="5" class="empty">Loading leads...</td></tr></tbody></table></div>
+    </section>
+</section>
+
+<section class="page" id="page-health">
+    <section class="panel">
+        <div class="panel-heading"><div><h2>System Health Center</h2><p>Live application and database readiness checks.</p></div><button class="primary" onclick="checkHealth()">Run Health Check</button></div>
+        <div class="health-grid">
+            <div class="health-card"><div class="health-symbol">◉</div><div><div class="health-title">Application Status</div><div class="health-status" id="appHealth">Not checked yet</div></div></div>
+            <div class="health-card"><div class="health-symbol">▤</div><div><div class="health-title">Database Readiness</div><div class="health-status" id="dbHealth">Not checked yet</div></div></div>
+        </div>
+        <div class="notice">This page performs health checks using the existing backend endpoints. Automatic recovery and incident history will be connected in the backend implementation stage.</div>
+    </section>
+</section>
+
+<section class="page" id="page-versions">
+    <section class="panel">
+        <div class="panel-heading"><div><h2>Version Manager</h2><p>Software version and release management</p></div></div>
+        <div class="health-card">
+            <div class="health-symbol">↻</div>
+            <div>
+                <div class="health-title">Installed Application Version</div>
+                <div class="version-number" id="currentVersion">1.0.0</div>
+                <div class="version-note" id="versionInfo">Showing the current project version from the package configuration.</div>
+            </div>
+        </div>
+        <div class="notice"><strong>Update and rollback integration is the next backend step.</strong><br>This screen does not install updates or roll back software yet. We will connect it to verified releases, health checks and a safe recovery process before enabling update controls.</div>
+    </section>
+    <section class="panel">
+        <div class="panel-heading"><div><h2>Release History</h2><p>Release records will appear here once version history is implemented.</p></div></div>
+        <div class="empty">Version history backend is not connected yet.</div>
+    </section>
+</section>
+<!-- Client Profile Modal -->
+<div class="profile-overlay" id="clientProfileModal">
+    <section
+        class="profile-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profileName"
+    >
+        <header class="profile-header">
+            <div>
+                <h2 id="profileName">Client Profile</h2>
+                <p id="profileCompany">Company details</p>
+            </div>
+
+            <button
+                type="button"
+                class="profile-close"
+                onclick="closeClientProfile()"
+                aria-label="Close profile"
+            >×</button>
+        </header>
+
+        <div class="profile-body">
+            <div class="profile-grid">
+                <div class="profile-field">
+                    <span>Email Address</span>
+                    <strong id="profileEmail">—</strong>
+                </div>
+
+                <div class="profile-field">
+                    <span>Phone Number</span>
+                    <strong id="profilePhone">—</strong>
+                </div>
+
+                <div class="profile-field">
+                    <span>Service / Interest</span>
+                    <strong id="profileInterest">—</strong>
+                </div>
+
+                <div class="profile-field">
+                    <span>Sales Status</span>
+                    <strong id="profileStatus">—</strong>
+                </div>
+
+                <div class="profile-field">
+                    <span>Next Follow-up</span>
+                    <strong id="profileFollowUp">—</strong>
+                </div>
+
+                <div class="profile-field">
+                    <span>Lead Created</span>
+                    <strong id="profileCreated">—</strong>
+                </div>
+
+                <div class="profile-field" style="grid-column:1/-1">
+                    <span>Customer Notes</span>
+                    <strong id="profileNotes">—</strong>
+                </div>
+            </div>
+
+            <section class="profile-section">
+                <h3>Client Activity History</h3>
+
+                <div class="activity-timeline" id="activityTimeline">
+                    <div class="empty">No activities recorded yet.</div>
+                </div>
+            </section>
+
+            <section class="profile-section">
+                <h3>Record a New Activity</h3>
+
+                <form id="activityForm" class="activity-form">
+                    <select id="activityType" aria-label="Activity type">
+                        <option value="Call">Call</option>
+                        <option value="Email">Email</option>
+                        <option value="Meeting">Meeting</option>
+                        <option value="Note">Note</option>
+                        <option value="Other">Other</option>
+                    </select>
+
+                    <textarea
+                        id="activityDescription"
+                        placeholder="What happened? Add call details, meeting notes or the next steps..."
+                        required
+                        maxlength="2000"
+                    ></textarea>
+
+                    <button type="submit" class="primary" id="activitySaveBtn">
+                        Save Activity
+                    </button>
+                </form>
+            </section>
+        </div>
+    </section>
+</div>
+
+<div class="footer">SaleSphere CRM · Sales Management & System Reliability</div>
+</main>
+</div>
+
+<script>
+    
+const API_URL = "/api/leads";
+const validStatuses = ["New", "Contacted", "Negotiation", "Won", "Lost"];
+
+const pageInfo = {
+    dashboard: ["Dashboard Overview", "Monitor your sales activity and customer leads."],
+    leads: ["Lead Management", "Manage customer records and track their progress."],
+    followups: ["Follow-up Management", "Track customer follow-ups and due dates."],
+    pipeline: ["Sales Pipeline", "Understand the status of your current opportunities."],
+    health: ["System Health Center", "Check application availability and database readiness."],
+    versions: ["Version Manager", "Manage software versions and recovery releases."]
+};
+
+let allLeads = [];
+let editingId = null;
+let messageTimer;
+let currentProfileId = null;
+
+const leadForm = document.getElementById("leadForm");
+const formPanel = document.getElementById("formPanel");
+const leadsTable = document.getElementById("leadsTable");
+const messageBox = document.getElementById("message");
+const saveBtn = document.getElementById("saveBtn");
+
+function showMessage(text, type = "success") {
+    clearTimeout(messageTimer);
+    messageBox.textContent = text;
+    messageBox.className = "message " + type;
+    messageTimer = setTimeout(() => {
+        messageBox.className = "message";
+    }, 4500);
+}
+
+function showPage(name) {
+    if (!pageInfo[name]) return;
+
+    document.querySelectorAll(".page").forEach(page => {
+        page.classList.remove("active");
+    });
+
+    document.getElementById("page-" + name).classList.add("active");
+
+    document.querySelectorAll(".nav-item").forEach(item => {
+        item.classList.toggle("active", item.dataset.page === name);
+    });
+
+    document.getElementById("pageTitle").textContent = pageInfo[name][0];
+    document.getElementById("pageSubtitle").textContent = pageInfo[name][1];
+
+    if (name === "health") checkHealth();
+    if (name === "versions") loadVersion();
+    if (name === "followups") renderFollowUps();
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+document.querySelectorAll(".nav-item[data-page]").forEach(item => {
+    item.addEventListener("click", () => showPage(item.dataset.page));
+});
+
+function openAddForm() {
+    showPage("leads");
+    editingId = null;
+    leadForm.reset();
+
+    document.getElementById("formTitle").textContent = "Add New Lead";
+    saveBtn.textContent = "Save Lead";
+    document.getElementById("statusInput").value = "New";
+
+    formPanel.style.display = "block";
+    formPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function closeForm() {
+    formPanel.style.display = "none";
+    leadForm.reset();
+    editingId = null;
+}
+
+function safeText(value) {
+    const el = document.createElement("span");
+    el.textContent = value ?? "";
+    return el.innerHTML;
+}
+
+function getStatus(lead) {
+    return validStatuses.includes(lead.status) ? lead.status : "New";
+}
+
+function initials(name) {
+    return String(name || "?").trim().split(/\s+/).slice(0, 2)
+        .map(part => part[0] || "").join("").toUpperCase();
+}
+
+function localDateString(date = new Date()) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
+function dateOnly(value) {
+    if (!value) return "";
+
+    const text = String(value);
+    const match = text.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (match) return match[1];
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+
+    return localDateString(date);
+}
+
+function formatDate(value) {
+    const date = dateOnly(value);
+    if (!date) return "Not scheduled";
+
+    const parts = date.split("-").map(Number);
+    const localDate = new Date(parts[0], parts[1] - 1, parts[2]);
+
+    return localDate.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    });
+}
+
+function followUpState(lead) {
+    if (!lead.followUpDate) return "NoDate";
+    if (["Won", "Lost"].includes(getStatus(lead))) return "Completed";
+
+    const dueDate = dateOnly(lead.followUpDate);
+    const today = localDateString();
+
+    if (!dueDate) return "NoDate";
+    if (dueDate < today) return "Overdue";
+    if (dueDate === today) return "Today";
+
+    return "Upcoming";
+}
+
+function getLeadPriority(lead) {
+    const status = getStatus(lead);
+
+    // Won/Lost leads are no longer active prospects.
+    if (status === "Won" || status === "Lost") {
+        return {
+            label: "Closed",
+            className: "priority-closed",
+            score: 0,
+            reason: status === "Won" ? "Deal won" : "Deal lost"
+        };
+    }
+
+    let score = 0;
+    const reasons = [];
+    const followUp = followUpState(lead);
+
+    // Overdue follow-up is the strongest signal.
+    if (followUp === "Overdue") {
+        score += 3;
+        reasons.push("Follow-up overdue");
+    } else if (followUp === "Today") {
+        score += 2;
+        reasons.push("Follow-up due today");
+    } else if (followUp === "Upcoming") {
+        const today = localDateString();
+        const dueDate = dateOnly(lead.followUpDate);
+
+        const daysUntilDue = Math.round(
+            (new Date(dueDate + "T12:00:00").getTime() -
+             new Date(today + "T12:00:00").getTime()) /
+             86400000
+        );
+
+        if (daysUntilDue <= 3) {
+            score += 1;
+            reasons.push("Follow-up due soon");
+        }
+    }
+
+    // New leads may need their first contact.
+    if (status === "New") {
+        score += 1;
+        reasons.push("Awaiting first contact");
+    }
+
+    // Negotiation indicates an active sales opportunity.
+    if (status === "Negotiation") {
+        score += 1;
+        reasons.push("Active negotiation");
+    }
+
+    if (score >= 3) {
+        return {
+            label: "Hot",
+            className: "priority-hot",
+            score,
+            reason: reasons.join(" · ")
+        };
+    }
+
+    if (score >= 1) {
+        return {
+            label: "Warm",
+            className: "priority-warm",
+            score,
+            reason: reasons.join(" · ")
+        };
+    }
+
+    return {
+        label: "Cold",
+        className: "priority-cold",
+        score,
+        reason: "No immediate priority signals"
+    };
+}
+
+function priorityBadge(lead) {
+    const priority = getLeadPriority(lead);
+
+    return `<span
+        class="priority-badge ${priority.className}"
+        title="${safeText(priority.reason)}"
+    >${priority.label}</span>`;
+}
+
+function followUpBadge(state) {
+    const classes = {
+        Overdue: "follow-overdue",
+        Today: "follow-today",
+        Upcoming: "follow-pending",
+        NoDate: "follow-pending",
+        Completed: "follow-done"
+    };
+
+    const labels = {
+        Overdue: "Overdue",
+        Today: "Due Today",
+        Upcoming: "Upcoming",
+        NoDate: "No Date",
+        Completed: "Completed"
+    };
+
+    return `<span class="follow-status ${classes[state] || "follow-pending"}">${labels[state] || state}</span>`;
+}
+
+function renderPipeline(containerId) {
+    const container = document.getElementById(containerId);
+
+    const counts = Object.fromEntries(
+        validStatuses.map(status => [
+            status,
+            allLeads.filter(lead => getStatus(lead) === status).length
+        ])
+    );
+
+    const max = Math.max(1, ...Object.values(counts));
+
+    container.innerHTML = validStatuses.map(status => `
+        <div class="pipeline-row">
+            <span class="pipeline-label">${status}</span>
+            <div class="bar-track">
+                <div class="bar bar-${status}" style="width:${counts[status] / max * 100}%"></div>
+            </div>
+            <span class="pipeline-count">${counts[status]}</span>
+        </div>
+    `).join("");
+}
+
+function renderRecentLeads() {
+    const container = document.getElementById("recentLeads");
+
+    const recent = [...allLeads]
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+        .slice(0, 5);
+
+    if (!recent.length) {
+        container.innerHTML = '<div class="empty">No leads yet. Add your first customer lead.</div>';
+        return;
+    }
+
+    container.innerHTML = recent.map(lead => `
+        <div class="activity-item">
+            <div class="avatar">${safeText(initials(lead.customerName))}</div>
+            <div>
+                <div class="activity-name">${safeText(lead.customerName)}</div>
+                <div class="activity-meta">${safeText(lead.companyName)} · ${safeText(lead.interest)}</div>
+                <div style="margin-top:7px">
+                    <span class="status status-${getStatus(lead)}">${getStatus(lead)}</span>
+                </div>
+            </div>
+        </div>
+    `).join("");
+}
+
+function renderFollowUpStats() {
+    const pending = allLeads.filter(lead =>
+        ["Today", "Upcoming"].includes(followUpState(lead))
+    ).length;
+
+    const overdue = allLeads.filter(lead =>
+        followUpState(lead) === "Overdue"
+    ).length;
+
+    document.getElementById("pendingFollowUps").textContent = pending;
+    document.getElementById("overdueFollowUps").textContent = overdue;
+}
+
+function renderDashboardFollowUps() {
+    const body = document.getElementById("dashboardFollowUps");
+
+    const dueLeads = allLeads
+        .filter(lead => ["Overdue", "Today", "Upcoming"].includes(followUpState(lead)))
+        .sort((a, b) => dateOnly(a.followUpDate).localeCompare(dateOnly(b.followUpDate)))
+        .slice(0, 6);
+
+    if (!dueLeads.length) {
+        body.innerHTML = '<tr><td colspan="5" class="empty">No scheduled follow-ups. Add a follow-up date to a customer lead.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = dueLeads.map(lead => `
+        <tr>
+            <td>
+                <div class="customer-name">${safeText(lead.customerName)}</div>
+                <div class="customer-email">${safeText(lead.companyName)}</div>
+            </td>
+            <td>${safeText(lead.phone || "No phone")}</td>
+            <td>${safeText(formatDate(lead.followUpDate))}</td>
+            <td>${followUpBadge(followUpState(lead))}</td>
+            <td><button class="edit-btn small" data-action="edit" data-id="${safeText(lead._id)}">Edit</button></td>
+        </tr>
+    `).join("");
+}
+
+function renderFollowUps() {
+    const body = document.getElementById("followUpsTable");
+    const searchTerm = (document.getElementById("followUpSearch")?.value || "").trim().toLowerCase();
+    const selectedFilter = document.getElementById("followUpFilter")?.value || "All";
+
+    const filtered = allLeads.filter(lead => {
+        const state = followUpState(lead);
+
+        const matchesSearch = [
+            lead.customerName, lead.companyName, lead.phone, lead.notes
+        ].some(value => String(value || "").toLowerCase().includes(searchTerm));
+
+        let matchesFilter = true;
+
+        if (selectedFilter === "Overdue") matchesFilter = state === "Overdue";
+        if (selectedFilter === "Today") matchesFilter = state === "Today";
+        if (selectedFilter === "Upcoming") matchesFilter = state === "Upcoming";
+        if (selectedFilter === "NoDate") matchesFilter = state === "NoDate";
+
+        return matchesSearch && matchesFilter;
+    }).sort((a, b) => {
+        const dateA = dateOnly(a.followUpDate) || "9999-12-31";
+        const dateB = dateOnly(b.followUpDate) || "9999-12-31";
+        return dateA.localeCompare(dateB);
+    });
+
+    if (!filtered.length) {
+        body.innerHTML = '<tr><td colspan="7" class="empty">No matching follow-ups found.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = filtered.map(lead => `
+        <tr>
+            <td>
+                <div class="customer-name">${safeText(lead.customerName)}</div>
+                <div class="customer-email">${safeText(lead.email || "No email")}</div>
+            </td>
+            <td>${safeText(lead.companyName)}</td>
+            <td>${safeText(lead.phone || "No phone")}</td>
+            <td>${safeText(formatDate(lead.followUpDate))}</td>
+            <td>${safeText(lead.notes || "No notes")}</td>
+            <td>${followUpBadge(followUpState(lead))}</td>
+            <td><button class="edit-btn small" data-action="edit" data-id="${safeText(lead._id)}">Edit</button></td>
+        </tr>
+    `).join("");
+}
+
+async function loadLeads() {
+    leadsTable.innerHTML = '<tr><td colspan="6" class="empty">Loading leads...</td></tr>';
+
+    try {
+        const response = await fetch(API_URL, { cache: "no-store" });
+        if (!response.ok) throw new Error("Could not load leads. HTTP " + response.status);
+
+        const data = await response.json();
+        if (!Array.isArray(data)) throw new Error("Unexpected response from server.");
+
+        allLeads = data;
+
+        const count = status => allLeads.filter(lead => getStatus(lead) === status).length;
+
+        document.getElementById("totalLeads").textContent = allLeads.length;
+        document.getElementById("newLeads").textContent = count("New");
+        document.getElementById("wonLeads").textContent = count("Won");
+
+        document.getElementById("conversionRate").textContent =
+            allLeads.length
+                ? (count("Won") / allLeads.length * 100).toFixed(1) + "%"
+                : "0%";
+
+        renderLeads();
+        renderPipeline("dashboardPipeline");
+        renderPipeline("fullPipeline");
+        renderRecentLeads();
+        renderPipelineTable();
+        renderFollowUpStats();
+        renderDashboardFollowUps();
+        renderFollowUps();
+
+        // Refresh the open profile with the latest saved activity data.
+        if (currentProfileId) {
+            const stillExists = allLeads.some(lead => lead._id === currentProfileId);
+
+            if (stillExists) {
+                fillClientProfile(currentProfileId);
+            } else {
+                closeClientProfile();
+            }
+        }
+    } catch (error) {
+        leadsTable.innerHTML = `<tr><td colspan="6" class="empty">${safeText(error.message)}</td></tr>`;
+
+        document.getElementById("recentLeads").innerHTML =
+            '<div class="empty">Unable to load recent leads.</div>';
+
+        document.getElementById("dashboardFollowUps").innerHTML =
+            '<tr><td colspan="5" class="empty">Unable to load follow-ups.</td></tr>';
+
+        document.getElementById("followUpsTable").innerHTML =
+            '<tr><td colspan="7" class="empty">Unable to load follow-ups.</td></tr>';
+
+        showMessage("Unable to load leads. Check the server and database connection.", "error");
+    }
+}
+
+function renderLeads() {
+    const searchTerm = document.getElementById("searchInput").value.trim().toLowerCase();
+    const selectedStatus = document.getElementById("statusFilter").value;
+
+    const filtered = allLeads.filter(lead => {
+        const matchesSearch = [
+            lead.customerName, lead.companyName, lead.email,
+            lead.phone, lead.interest, lead.notes
+        ].some(value => String(value ?? "").toLowerCase().includes(searchTerm));
+
+        return matchesSearch &&
+            (selectedStatus === "All" || getStatus(lead) === selectedStatus);
+    });
+
+    if (!filtered.length) {
+        leadsTable.innerHTML = '<tr><td colspan="6" class="empty">No matching leads found.</td></tr>';
+        return;
+    }
+
+    leadsTable.innerHTML = filtered.map(lead => `
+        <tr>
+            <td>
+                <button
+                    type="button"
+                    class="customer-link"
+                    data-action="profile"
+                    data-id="${safeText(lead._id)}"
+                >${safeText(lead.customerName)}</button>
+
+                <div class="customer-email">
+                    ${safeText(lead.email || "No email")}<br>
+                    ${safeText(lead.phone || "No phone")}
+                </div>
+            </td>
+            <td>${safeText(lead.companyName)}</td>
+            <td>${safeText(lead.interest)}</td>
+            <td><span class="status status-${getStatus(lead)}">${getStatus(lead)}</span></td>
+            <td>
+                ${safeText(formatDate(lead.followUpDate))}<br><br>
+                ${followUpBadge(followUpState(lead))}
+            </td>
+            <td>
+                <div class="actions">
+                    <button class="edit-btn small" data-action="edit" data-id="${safeText(lead._id)}">Edit</button>
+                    <button class="delete-btn small" data-action="delete" data-id="${safeText(lead._id)}">Delete</button>
+                </div>
+            </td>
+        </tr>
+    `).join("");
+}
+
+function renderPipelineTable() {
+    const body = document.getElementById("pipelineTable");
+
+    if (!allLeads.length) {
+        body.innerHTML = '<tr><td colspan="5" class="empty">No leads to display.</td></tr>';
+        return;
+    }
+
+    body.innerHTML = allLeads.map(lead => `
+        <tr>
+            <td>
+                <div class="customer-name">${safeText(lead.customerName)}</div>
+                <div class="customer-email">${safeText(lead.email || "No email")}</div>
+            </td>
+            <td>${safeText(lead.companyName)}</td>
+            <td>${safeText(lead.interest)}</td>
+            <td><span class="status status-${getStatus(lead)}">${getStatus(lead)}</span></td>
+            <td><button class="edit-btn small" data-action="edit" data-id="${safeText(lead._id)}">Update stage</button></td>
+        </tr>
+    `).join("");
+}
+
+/* CLIENT PROFILE */
+
+function openClientProfile(id) {
+    const lead = allLeads.find(item => item._id === id);
+
+    if (!lead) {
+        showMessage("Client not found. Refresh and try again.", "error");
+        return;
+    }
+
+    currentProfileId = id;
+    fillClientProfile(id);
+
+    document.getElementById("clientProfileModal").classList.add("open");
+    document.body.style.overflow = "hidden";
+}
+
+function fillClientProfile(id) {
+    const lead = allLeads.find(item => item._id === id);
+    if (!lead) return;
+
+    document.getElementById("profileName").textContent =
+        lead.customerName || "Unnamed Client";
+
+    document.getElementById("profileCompany").textContent =
+        lead.companyName || "No company";
+
+    document.getElementById("profileEmail").textContent =
+        lead.email || "Not provided";
+
+    document.getElementById("profilePhone").textContent =
+        lead.phone || "Not provided";
+
+    document.getElementById("profileInterest").textContent =
+        lead.interest || "Not specified";
+
+    document.getElementById("profileStatus").textContent = getStatus(lead);
+    document.getElementById("profileFollowUp").textContent = formatDate(lead.followUpDate);
+
+    document.getElementById("profileCreated").textContent = lead.createdAt
+        ? new Date(lead.createdAt).toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        })
+        : "Not available";
+
+    document.getElementById("profileNotes").textContent =
+        lead.notes || "No customer notes added.";
+
+    const timeline = document.getElementById("activityTimeline");
+
+    const activities = [...(lead.activities || [])].sort(
+        (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+    );
+
+    if (!activities.length) {
+        timeline.innerHTML =
+            '<div class="empty">No activities yet. Record your first client interaction below.</div>';
+        return;
+    }
+
+    timeline.innerHTML = activities.map(activity => {
+        const activityDate = activity.createdAt
+            ? new Date(activity.createdAt).toLocaleString("en-IN", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+            })
+            : "Date unavailable";
+
+        return `
+            <article class="activity-record">
+                <div class="activity-record-top">
+                    <span class="activity-record-type">${safeText(activity.type || "Note")}</span>
+                    <span class="activity-record-date">${safeText(activityDate)}</span>
+                </div>
+                <div class="activity-record-description">${safeText(activity.description)}</div>
+            </article>
+        `;
+    }).join("");
+}
+
+function closeClientProfile() {
+    document.getElementById("clientProfileModal").classList.remove("open");
+    document.body.style.overflow = "";
+    currentProfileId = null;
+}
+
+document.getElementById("clientProfileModal").addEventListener("click", event => {
+    if (event.target.id === "clientProfileModal") {
+        closeClientProfile();
+    }
+});
+
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape") closeClientProfile();
+});
+
+document.getElementById("activityForm").addEventListener("submit", async event => {
+    event.preventDefault();
+
+    if (!currentProfileId) {
+        showMessage("Please open a client profile first.", "error");
+        return;
+    }
+
+    const id = currentProfileId;
+    const type = document.getElementById("activityType").value;
+    const description = document.getElementById("activityDescription").value.trim();
+    const activitySaveBtn = document.getElementById("activitySaveBtn");
+
+    if (!description) {
+        showMessage("Please enter an activity description.", "error");
+        return;
+    }
+
+    activitySaveBtn.disabled = true;
+
+    try {
+        const response = await fetch(
+            `${API_URL}/${encodeURIComponent(id)}/activities`,
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ type, description })
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || "Unable to save activity.");
+        }
+
+        document.getElementById("activityDescription").value = "";
+
+        await loadLeads();
+
+        // loadLeads refreshes the currently open profile.
+        if (currentProfileId === id) {
+            fillClientProfile(id);
+        }
+
+        showMessage("Client activity saved successfully.");
+    } catch (error) {
+        showMessage(error.message, "error");
+    } finally {
+        activitySaveBtn.disabled = false;
+    }
+});
+
+/* EDIT AND DELETE */
+
+document.addEventListener("click", event => {
+    const button = event.target.closest("button[data-action]");
+    if (!button) return;
+
+    const { action, id } = button.dataset;
+
+    if (action === "profile") openClientProfile(id);
+    if (action === "edit") editLead(id);
+    if (action === "delete") deleteLead(id);
+});
+
+function editLead(id) {
+    const lead = allLeads.find(item => item._id === id);
+
+    if (!lead) {
+        showMessage("Lead not found. Refresh and try again.", "error");
+        return;
+    }
+
+    showPage("leads");
+
+    editingId = id;
+    document.getElementById("customerName").value = lead.customerName || "";
+    document.getElementById("companyName").value = lead.companyName || "";
+    document.getElementById("email").value = lead.email || "";
+    document.getElementById("phone").value = lead.phone || "";
+    document.getElementById("interest").value = lead.interest || "";
+    document.getElementById("statusInput").value = getStatus(lead);
+    document.getElementById("followUpDate").value = dateOnly(lead.followUpDate);
+    document.getElementById("notes").value = lead.notes || "";
+
+    document.getElementById("formTitle").textContent = "Edit Lead";
+    saveBtn.textContent = "Update Lead";
+
+    formPanel.style.display = "block";
+    formPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function deleteLead(id) {
+    const lead = allLeads.find(item => item._id === id);
+
+    if (!lead) {
+        showMessage("Lead not found. Refresh and try again.", "error");
+        return;
+    }
+
+    if (!confirm(`Are you sure you want to delete ${lead.customerName}?`)) return;
+
+    try {
+        const response = await fetch(`${API_URL}/${encodeURIComponent(id)}`, {
+            method: "DELETE"
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || "Unable to delete lead.");
+        }
+
+        if (currentProfileId === id) closeClientProfile();
+
+        showMessage("Lead deleted successfully.");
+        await loadLeads();
+    } catch (error) {
+        showMessage(error.message, "error");
+    }
+}
+
+leadForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const leadData = {
+        customerName: document.getElementById("customerName").value.trim(),
+        companyName: document.getElementById("companyName").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        phone: document.getElementById("phone").value.trim(),
+        interest: document.getElementById("interest").value.trim(),
+        status: document.getElementById("statusInput").value,
+        followUpDate: document.getElementById("followUpDate").value || null,
+        notes: document.getElementById("notes").value.trim()
+    };
+
+    if (!leadData.customerName || !leadData.companyName || !leadData.interest) {
+        showMessage("Customer name, company name and interest are required.", "error");
+        return;
+    }
+
+    saveBtn.disabled = true;
+
+    try {
+        const isEditing = Boolean(editingId);
+
+        const response = await fetch(
+            isEditing ? `${API_URL}/${encodeURIComponent(editingId)}` : API_URL,
+            {
+                method: isEditing ? "PUT" : "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(leadData)
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || "Unable to save lead.");
+        }
+
+        closeForm();
+
+        showMessage(
+            isEditing ? "Lead updated successfully." : "New lead added successfully."
+        );
+
+        await loadLeads();
+    } catch (error) {
+        showMessage(error.message, "error");
+    } finally {
+        saveBtn.disabled = false;
+    }
+});
+
+document.getElementById("searchInput").addEventListener("input", renderLeads);
+document.getElementById("statusFilter").addEventListener("change", renderLeads);
+document.getElementById("followUpSearch").addEventListener("input", renderFollowUps);
+document.getElementById("followUpFilter").addEventListener("change", renderFollowUps);
+
+/* SYSTEM HEALTH */
+
+async function checkHealth() {
+    const targets = [
+        {
+            url: "/healthz",
+            app: "appHealth",
+            dash: "dashboardAppHealth",
+            label: "Application"
+        },
+        {
+            url: "/readyz",
+            app: "dbHealth",
+            dash: "dashboardDbHealth",
+            label: "Database"
+        }
+    ];
+
+    await Promise.all(targets.map(async target => {
+        const elements = [
+            document.getElementById(target.app),
+            document.getElementById(target.dash)
+        ].filter(Boolean);
+
+        elements.forEach(el => {
+            el.textContent = "Checking...";
+        });
+
+        try {
+            const response = await fetch(target.url, { cache: "no-store" });
+            const data = await response.json();
+
+            const isHealthy = response.ok && (
+                target.url === "/healthz"
+                    ? data.status === "running"
+                    : data.ready === true
+            );
+
+            const detail = isHealthy
+                ? target.label + " healthy · Checked " + new Date().toLocaleTimeString()
+                : target.label + " issue detected · HTTP " + response.status;
+
+            elements.forEach(el => {
+                el.innerHTML =
+                    '<span class="dot ' + (isHealthy ? "ok" : "bad") +
+                    '"></span>' + safeText(detail);
+            });
+        } catch {
+            elements.forEach(el => {
+                el.innerHTML =
+                    '<span class="dot bad"></span>' +
+                    safeText(target.label + " endpoint unreachable");
+            });
+        }
+    }));
+}
+
+async function loadVersion() {
+    const versionEl = document.getElementById("currentVersion");
+    const infoEl = document.getElementById("versionInfo");
+
+    try {
+        const response = await fetch("/api/system/version", { cache: "no-store" });
+
+        if (!response.ok) {
+            throw new Error("Version endpoint is not available yet.");
+        }
+
+        const data = await response.json();
+
+        versionEl.textContent = data.version || "Unknown";
+
+        infoEl.textContent = data.name
+            ? `${data.name} · ${data.environment || "Application release"}`
+            : "Version information loaded.";
+    } catch {
+        versionEl.textContent = "1.0.0";
+        infoEl.textContent =
+            "Project package version. Backend version endpoint still needs to be connected.";
+    }
+}
+
+loadLeads();
+checkHealth();
+
+</script>
+</body>
+</html>

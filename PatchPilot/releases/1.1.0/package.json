@@ -1,0 +1,23 @@
+{
+  "name": "salesphere",
+  "version": "1.1.0",
+  "description": "Self-Healing Sales CRM with Version Management",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "echo \"Tests will be added\""
+  },
+  "keywords": [
+    "crm",
+    "self-healing",
+    "version-management"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^18.0.8",
+    "express": "^5.3.0",
+    "mongoose": "^9.11.2"
+  }
+}
