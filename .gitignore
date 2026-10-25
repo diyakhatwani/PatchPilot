@@ -5,3 +5,8 @@
 **/.env.*
 !**/.env.example
 **/coverage/
+
+# Local runtime data
+SaleSphere/data/incidents.json
+SaleSphere/data/leads-cache.json
+SaleSphere/data/pending-lead-operations.json
