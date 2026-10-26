@@ -2952,3 +2952,407 @@ textarea:focus {
     opacity: 0.35;
   }
 }
+
+.followup-reminder {
+  position: relative;
+  margin: 0 0 24px;
+  padding: 22px;
+  border: 1px solid #f4d28b;
+  border-left: 5px solid #e9a23b;
+  border-radius: 14px;
+  background: linear-gradient(120deg, #fffaf0, #ffffff);
+  color: #243247;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+}
+
+.followup-reminder-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: #64748b;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.followup-reminder-close:hover {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.followup-reminder-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding-right: 38px;
+  margin-bottom: 18px;
+}
+
+.followup-reminder-icon {
+  font-size: 25px;
+}
+
+.followup-reminder-heading h2 {
+  margin: 0 0 6px;
+  font-size: 19px;
+}
+
+.followup-reminder-heading p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.followup-reminder-list {
+  display: grid;
+  gap: 10px;
+}
+
+.followup-reminder-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 13px 14px;
+  border: 1px solid #f1e7d2;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.followup-reminder-customer {
+  display: grid;
+  gap: 5px;
+}
+
+.followup-reminder-customer strong {
+  color: #1e293b;
+  font-size: 14px;
+}
+
+.followup-reminder-customer span,
+.followup-reminder-date > span:first-child {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.followup-reminder-date {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.reminder-overdue,
+.reminder-today {
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reminder-overdue {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.reminder-today {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+@media (max-width: 600px) {
+  .followup-reminder {
+    padding: 16px;
+  }
+
+  .followup-reminder-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* Email Service Recovery Monitor */
+.email-recovery-panel {
+  margin-top: 24px;
+}
+
+.email-recovery-panel .panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.email-recovery-panel .panel-heading h2 {
+  margin: 0 0 6px;
+  color: #172b4d;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.email-recovery-panel .panel-heading p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.email-recovery-status {
+  margin-top: 18px;
+  padding: 22px;
+  border: 1px solid #dbe3ef;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #1e293b;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.email-recovery-status h3 {
+  margin: 0 0 10px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.email-recovery-status p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.email-recovery-status.is-failed {
+  background: #fff1f2;
+  border-color: #fda4af;
+}
+
+.email-recovery-status.is-recovering {
+  background: #fff7ed;
+  border-color: #fdba74;
+}
+
+.email-recovery-status.is-recovered {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.email-recovery-status.is-healthy {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.email-recovery-details {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.email-recovery-detail {
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.email-recovery-detail span {
+  display: block;
+  margin-bottom: 7px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.email-recovery-detail strong {
+  color: #172b4d;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 700px) {
+  .email-recovery-details {
+    grid-template-columns: 1fr;
+  }
+
+  .email-recovery-panel .panel-heading {
+    align-items: flex-start;
+  }
+}
+.email-recovery-panel > .btn {
+  margin-top: 20px;
+}
+
+.email-mini-card {
+  min-width: 0;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.email-mini-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.email-mini-animation {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 16px 0 12px;
+  padding: 11px;
+  border-radius: 9px;
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.email-mini-pulse {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 9px;
+  border-radius: 50%;
+  background: #16a34a;
+  box-shadow: 0 0 0 4px #dcfce7;
+}
+
+.email-mini-failed {
+  border-color: #fca5a5 !important;
+  background: #fff1f2 !important;
+}
+
+.email-mini-failed .email-mini-pulse {
+  background: #dc2626;
+  box-shadow: 0 0 0 4px #fee2e2;
+  animation: emailPulse 0.8s infinite;
+}
+
+.email-mini-recovering {
+  border-color: #fdba74 !important;
+  background: #fff7ed !important;
+}
+
+.email-mini-recovering .email-mini-pulse {
+  background: #f59e0b;
+  box-shadow: 0 0 0 4px #ffedd5;
+  animation: emailPulse 1s infinite;
+}
+
+.email-mini-recovered {
+  border-color: #86efac !important;
+  background: #f0fdf4 !important;
+}
+
+.email-mini-recovered .email-mini-pulse {
+  background: #16a34a;
+  box-shadow: 0 0 0 4px #dcfce7;
+}
+
+@keyframes emailPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.75);
+    opacity: 0.55;
+  }
+}
+
+.release-health-card {
+  transition: background 0.35s ease, border-color 0.35s ease;
+}
+
+.release-health-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.release-live-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #16a34a;
+  box-shadow: 0 0 0 4px #dcfce7;
+}
+
+.release-animation-track {
+  height: 5px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #e2e8f0;
+  margin: 16px 0 12px;
+}
+
+.release-animation-line {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #16a34a;
+  border-radius: inherit;
+}
+
+.release-healthy {
+  border-color: #86efac !important;
+  background: #f0fdf4 !important;
+}
+
+.release-healthy .release-animation-line {
+  animation: releaseScan 2.5s ease-in-out infinite;
+}
+
+.release-recovering {
+  border-color: #fdba74 !important;
+  background: #fff7ed !important;
+}
+
+.release-recovering .release-live-dot {
+  background: #f59e0b;
+  box-shadow: 0 0 0 4px #ffedd5;
+  animation: emailPulse 0.9s infinite;
+}
+
+.release-recovering .release-animation-line {
+  width: 45%;
+  background: #f59e0b;
+  animation: releaseProgress 1.2s ease-in-out infinite alternate;
+}
+
+.release-failed {
+  border-color: #fca5a5 !important;
+  background: #fff1f2 !important;
+}
+
+.release-failed .release-live-dot {
+  background: #dc2626;
+  box-shadow: 0 0 0 4px #fee2e2;
+  animation: emailPulse 0.8s infinite;
+}
+
+.release-failed .release-animation-line {
+  width: 100%;
+  background: #dc2626;
+}
+
+.release-animation-message {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #475569;
+}
+
+@keyframes releaseScan {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; }
+}
+
+@keyframes releaseProgress {
+  from { transform: translateX(0); }
+  to { transform: translateX(115%); }
+}

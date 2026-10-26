@@ -1,39 +1,64 @@
-
 const express = require("express");
 const mongoose = require("mongoose");
 const path = require("path");
 const fs = require("fs");
+const nodemailer = require("nodemailer");
+
 require("dotenv").config({
     path: path.join(__dirname, ".env")
 });
 
 const Lead = require("./models/Lead");
-
 const app = express();
 const PORT = process.env.PORT || 3101;
+const emailTransporter =
+    process.env.EMAIL_USER && process.env.EMAIL_PASS
+        ? nodemailer.createTransport({
+              service: "gmail",
+              auth: {
+                  user: process.env.EMAIL_USER,
+                  pass: process.env.EMAIL_PASS
+              }
+          })
+        : null;
+const mongoURI =
+    process.env.MONGODB_URI ||
+    "mongodb://127.0.0.1:27017/salesphere";
 
-// ---------- MIDDLEWARE ----------
+const stableVersion = require("./package.json").version;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
-// ---------- SELF-HEALING VERSION MANAGER ----------
 
-const stableVersion = require("./package.json").version;
+// ==================================================
+// LOCAL DATA FILES
+// ==================================================
+
 const dataFolder = path.join(__dirname, "data");
 
 if (!fs.existsSync(dataFolder)) {
     fs.mkdirSync(dataFolder, { recursive: true });
 }
 
+const leadsCacheFile = path.join(
+    dataFolder,
+    "leads-cache.json"
+);
 
-
-
-const leadsCacheFile = path.join(dataFolder, "leads-cache.json");
 const pendingOperationsFile = path.join(
     dataFolder,
     "pending-lead-operations.json"
+);
+
+const incidentFile = path.join(
+    dataFolder,
+    "incidents.json"
+);
+const emailQueueFile = path.join(
+    dataFolder,
+    "pending-email-operations.json"
 );
 
 function readJsonFile(filePath, fallback) {
@@ -42,8 +67,9 @@ function readJsonFile(filePath, fallback) {
             return fallback;
         }
 
-        const content = fs.readFileSync(filePath, "utf8");
-        return JSON.parse(content);
+        return JSON.parse(
+            fs.readFileSync(filePath, "utf8")
+        );
     } catch (error) {
         console.error(
             `Unable to read ${path.basename(filePath)}:`,
@@ -66,27 +92,94 @@ function writeJsonFile(filePath, data) {
     fs.renameSync(temporaryFile, filePath);
 }
 
-let cachedLeads = readJsonFile(leadsCacheFile, []);
+let cachedLeads = readJsonFile(
+    leadsCacheFile,
+    []
+);
+
 let pendingLeadOperations = readJsonFile(
     pendingOperationsFile,
     []
 );
 
-if (!Array.isArray(cachedLeads)) cachedLeads = [];
+let incidents = readJsonFile(
+    incidentFile,
+    []
+);
+let pendingEmailOperations = readJsonFile(
+    emailQueueFile,
+    []
+);
+
+if (!Array.isArray(pendingEmailOperations)) {
+    pendingEmailOperations = [];
+}
+if (!Array.isArray(cachedLeads)) {
+    cachedLeads = [];
+}
+
 if (!Array.isArray(pendingLeadOperations)) {
     pendingLeadOperations = [];
 }
 
+if (!Array.isArray(incidents)) {
+    incidents = [];
+}
+
 function saveLeadsCache() {
-    writeJsonFile(leadsCacheFile, cachedLeads);
+    try {
+        writeJsonFile(leadsCacheFile, cachedLeads);
+    } catch (error) {
+        console.error(
+            "Lead cache save failed:",
+            error.message
+        );
+    }
 }
 
 function savePendingOperations() {
-    writeJsonFile(
-        pendingOperationsFile,
-        pendingLeadOperations
-    );
+    try {
+        writeJsonFile(
+            pendingOperationsFile,
+            pendingLeadOperations
+        );
+    } catch (error) {
+        console.error(
+            "Pending operation queue save failed:",
+            error.message
+        );
+    }
 }
+
+function saveIncidents() {
+    try {
+        incidents = incidents.slice(-100);
+
+        writeJsonFile(incidentFile, incidents);
+    } catch (error) {
+        console.error(
+            "Incident history save failed:",
+            error.message
+        );
+    }
+}
+function savePendingEmailOperations() {
+    try {
+        writeJsonFile(
+            emailQueueFile,
+            pendingEmailOperations
+        );
+    } catch (error) {
+        console.error(
+            "Pending email queue save failed:",
+            error.message
+        );
+    }
+}
+
+// ==================================================
+// DATABASE AND CACHE HELPERS
+// ==================================================
 
 function isMongoAvailable() {
     return mongoose.connection.readyState === 1;
@@ -97,66 +190,19 @@ function findCachedLead(id) {
         (lead) => String(lead._id) === String(id)
     );
 }
-function mergePendingOperationsIntoLeads(databaseLeads) {
-    const mergedLeads = databaseLeads.map(lead => ({
-        ...lead
-    }));
 
-    for (const operation of pendingLeadOperations) {
-        const id = String(operation.id);
-
-        if (operation.type === "create") {
-            const existingIndex = mergedLeads.findIndex(
-                lead => String(lead._id) === id
-            );
-
-            const localLead = {
-                ...operation.data,
-                _id: id
-            };
-
-            if (existingIndex >= 0) {
-                mergedLeads[existingIndex] = {
-                    ...mergedLeads[existingIndex],
-                    ...localLead
-                };
-            } else {
-                mergedLeads.unshift(localLead);
-            }
-
-        } else if (operation.type === "update") {
-            const index = mergedLeads.findIndex(
-                lead => String(lead._id) === id
-            );
-
-            if (index >= 0) {
-                mergedLeads[index] = {
-                    ...mergedLeads[index],
-                    ...operation.data
-                };
-            }
-
-        } else if (operation.type === "delete") {
-            const index = mergedLeads.findIndex(
-                lead => String(lead._id) === id
-            );
-
-            if (index >= 0) {
-                mergedLeads.splice(index, 1);
-            }
-        }
-    }
-
-    return mergedLeads;
-}
 function updateCachedLead(lead) {
     const id = String(lead._id);
+
     const index = cachedLeads.findIndex(
         (item) => String(item._id) === id
     );
 
     if (index >= 0) {
-        cachedLeads[index] = lead;
+        cachedLeads[index] = {
+            ...cachedLeads[index],
+            ...lead
+        };
     } else {
         cachedLeads.unshift(lead);
     }
@@ -181,17 +227,109 @@ function queueLeadOperation(operation) {
     savePendingOperations();
 }
 
+function getPendingCreateIds() {
+    return new Set(
+        pendingLeadOperations
+            .filter(
+                (operation) => operation.type === "create"
+            )
+            .map((operation) => String(operation.id))
+    );
+}
 
-// ---------- AUTOMATIC OFFLINE QUEUE SYNC ----------
+function getPendingDeleteIds() {
+    return new Set(
+        pendingLeadOperations
+            .filter(
+                (operation) => operation.type === "delete"
+            )
+            .map((operation) => String(operation.id))
+    );
+}
 
+function getConfirmedCachedLeads() {
+    const pendingCreateIds = getPendingCreateIds();
+    const pendingDeleteIds = getPendingDeleteIds();
+
+    return cachedLeads.filter((lead) => {
+        const id = String(lead._id);
+
+        return (
+            !pendingCreateIds.has(id) &&
+            !pendingDeleteIds.has(id)
+        );
+    });
+}
+
+// ==================================================
+// INCIDENT AND VERSION STATE
+// ==================================================
+
+let versionState = {
+    currentVersion: stableVersion,
+    stableVersion,
+    status: "healthy",
+    activeIncidentId: null,
+    updatedAt: new Date().toISOString()
+};
+
+let chaosModeUntil = 0;
+let activeMongoIncidentId = null;
+
+let reconnectTimer = null;
+let reconnectDelay = 1000;
+let isConnecting = false;
 let isSyncingOperations = false;
+let recoveryVerificationRunning = false;
 
+function addIncidentEvent(incident, event, details) {
+    if (!Array.isArray(incident.events)) {
+        incident.events = [];
+    }
 
+    incident.events.push({
+        event,
+        details,
+        timestamp: new Date().toISOString()
+    });
+
+    incident.updatedAt = new Date().toISOString();
+
+    saveIncidents();
+}
+
+function updateIncidentStatus(
+    incident,
+    status,
+    details
+) {
+    incident.status = status;
+    incident.updatedAt = new Date().toISOString();
+
+    addIncidentEvent(
+        incident,
+        status,
+        details
+    );
+}
+
+function updateVersionState(status) {
+    versionState.status = status;
+    versionState.updatedAt = new Date().toISOString();
+}
+
+function isDatabaseReady() {
+    return isMongoAvailable();
+}
+
+// ==================================================
+// OFFLINE QUEUE AUTOMATIC SYNCHRONIZATION
+// ==================================================
 
 async function syncPendingLeadOperations() {
     if (
         isSyncingOperations ||
-        mongoose.connection.readyState !== 1 ||
+        !isMongoAvailable() ||
         pendingLeadOperations.length === 0
     ) {
         return;
@@ -202,73 +340,78 @@ async function syncPendingLeadOperations() {
     try {
         while (
             pendingLeadOperations.length > 0 &&
-            mongoose.connection.readyState === 1
+            isMongoAvailable()
         ) {
             const operation = pendingLeadOperations[0];
+            const id = String(operation.id);
 
             if (operation.type === "create") {
                 const leadData = {
                     ...operation.data,
-                    _id: operation.id
+                    _id: id
                 };
 
-                // Preserve original timestamps without conflicting
-                // with Mongoose's automatic timestamp updates.
                 await Lead.updateOne(
-                    { _id: operation.id },
-                    { $setOnInsert: leadData },
+                    { _id: id },
+                    {
+                        $setOnInsert: leadData
+                    },
                     {
                         upsert: true,
                         runValidators: true,
                         timestamps: false
                     }
                 );
-
             } else if (operation.type === "update") {
-                const updateData = { ...operation.data };
+                const updateData = {
+                    ...operation.data
+                };
 
                 delete updateData._id;
                 delete updateData.createdAt;
                 delete updateData.updatedAt;
                 delete updateData.__v;
 
-                const updatedLead = await Lead.findByIdAndUpdate(
-                    operation.id,
-                    { $set: updateData },
-                    {
-                        new: true,
-                        runValidators: true,
-                        timestamps: true
-                    }
-                );
+                const updatedLead =
+                    await Lead.findByIdAndUpdate(
+                        id,
+                        { $set: updateData },
+                        {
+                            new: true,
+                            runValidators: true,
+                            timestamps: true
+                        }
+                    );
 
                 if (!updatedLead) {
                     throw new Error(
-                        `Lead ${operation.id} was not found during sync.`
+                        `Lead ${id} was not found during synchronization.`
                     );
                 }
-
             } else if (operation.type === "delete") {
-                await Lead.deleteOne({ _id: operation.id });
-
+                await Lead.deleteOne({
+                    _id: id
+                });
             } else {
                 throw new Error(
                     `Unknown queued operation: ${operation.type}`
                 );
             }
 
-            // Remove only after the database operation succeeds.
+            // Remove from queue only after database operation succeeds.
             pendingLeadOperations.shift();
             savePendingOperations();
 
             console.log(
-                `Offline operation synced: ${operation.type}`
+                `Offline operation synchronized: ${operation.type} (${id})`
             );
         }
 
+        // Refresh confirmed cache only when every queued operation
+        // has successfully synchronized.
         if (
             pendingLeadOperations.length === 0 &&
-            mongoose.connection.readyState === 1
+            isMongoAvailable()
         ) {
             cachedLeads = await Lead.find()
                 .sort({ createdAt: -1 })
@@ -277,97 +420,22 @@ async function syncPendingLeadOperations() {
             saveLeadsCache();
 
             console.log(
-                "SaleSphere cache refreshed. All queued changes synced."
+                "Offline queue synchronized. Lead cache refreshed."
             );
         }
-
     } catch (error) {
         console.error(
-            "Automatic sync paused:",
+            "Automatic synchronization paused; queued changes retained:",
             error.message
         );
-
     } finally {
         isSyncingOperations = false;
     }
 }
-// Retry queued changes while the database is connected.
-setInterval(() => {
-    if (
-        mongoose.connection.readyState === 1 &&
-        pendingLeadOperations.length > 0
-    ) {
-        syncPendingLeadOperations();
-    }
-}, 5000);
-if (!fs.existsSync(dataFolder)) {
-    fs.mkdirSync(dataFolder, { recursive: true });
-}
-const incidentFile = path.join(dataFolder, "incidents.json");
-let incidents = [];
 
-try {
-    if (fs.existsSync(incidentFile)) {
-        incidents = JSON.parse(
-            fs.readFileSync(incidentFile, "utf8")
-        );
-
-        if (!Array.isArray(incidents)) {
-            incidents = [];
-        }
-    }
-} catch (error) {
-    console.error("Incident history load failed:", error.message);
-    incidents = [];
-}
-
-let versionState = {
-    currentVersion: stableVersion,
-    stableVersion,
-    status: "healthy",
-    activeIncidentId: null,
-    updatedAt: new Date().toISOString()
-};
-
-function saveIncidents() {
-    try {
-        fs.writeFileSync(
-            incidentFile,
-            JSON.stringify(incidents.slice(-100), null, 2)
-        );
-    } catch (error) {
-        console.error("Incident history save failed:", error.message);
-    }
-}
-
-function addIncidentEvent(incident, event, details) {
-    incident.events.push({
-        event,
-        details,
-        timestamp: new Date().toISOString()
-    });
-
-    saveIncidents();
-}
-
-function updateIncidentStatus(incident, status, details) {
-    incident.status = status;
-    incident.updatedAt = new Date().toISOString();
-
-    addIncidentEvent(incident, status, details);
-}
-
-
-function updateVersionState(status) {
-    versionState.status = status;
-    versionState.updatedAt = new Date().toISOString();
-}
-
-function isDatabaseReady() {
-    return mongoose.connection.readyState === 1;
-}
-
-// ---------- HOME ----------
+// ==================================================
+// HOME AND HEALTH ENDPOINTS
+// ==================================================
 
 app.get("/", (req, res) => {
     res.sendFile(
@@ -375,9 +443,6 @@ app.get("/", (req, res) => {
     );
 });
 
-// ---------- HEALTH ENDPOINTS ----------
-
-// Application liveness
 app.get("/healthz", (req, res) => {
     res.json({
         app: "SaleSphere",
@@ -386,22 +451,25 @@ app.get("/healthz", (req, res) => {
     });
 });
 
-// Database readiness
 app.get("/readyz", (req, res) => {
-    const databaseConnected = isDatabaseReady();
+    const connected = isDatabaseReady();
 
-    res.status(databaseConnected ? 200 : 503).json({
+    res.status(connected ? 200 : 503).json({
         app: "SaleSphere",
-        database: databaseConnected
+        database: connected
             ? "connected"
             : "disconnected",
-        ready: databaseConnected
+        ready: connected
     });
 });
 
-// ---------- VERSION ENDPOINTS ----------
+// ==================================================
+// VERSION MANAGER
+// ==================================================
 
 app.get("/api/system/version", (req, res) => {
+    res.set("Cache-Control", "no-store");
+
     res.json({
         name: "SaleSphere",
         environment: "Controlled self-healing demo",
@@ -412,7 +480,8 @@ app.get("/api/system/version", (req, res) => {
 app.get("/api/system/version/health", (req, res) => {
     const healthy =
         versionState.status === "healthy" &&
-        versionState.currentVersion === versionState.stableVersion &&
+        versionState.currentVersion ===
+            versionState.stableVersion &&
         isDatabaseReady();
 
     res.status(healthy ? 200 : 503).json({
@@ -424,8 +493,6 @@ app.get("/api/system/version/health", (req, res) => {
         checkedAt: new Date().toISOString()
     });
 });
-
-// ---------- CHAOS / FAILURE INJECTION ----------
 
 app.post("/api/system/version/chaos", (req, res) => {
     if (versionState.activeIncidentId) {
@@ -448,19 +515,15 @@ app.post("/api/system/version/chaos", (req, res) => {
         id: `VERSION-${Date.now()}`,
         type: "Automatic Version Rollback",
         status: "injected",
-
         previousVersion: versionState.stableVersion,
-        failedVersion: `${versionState.stableVersion}`,
-
+        failedVersion: `${versionState.stableVersion}-candidate`,
         startedAt: now,
         detectedAt: null,
         diagnosedAt: null,
         actionAt: null,
         recoveredAt: null,
-
         detectionTimeMs: null,
         recoveryTimeMs: null,
-
         events: []
     };
 
@@ -474,7 +537,7 @@ app.post("/api/system/version/chaos", (req, res) => {
     addIncidentEvent(
         incident,
         "Injected",
-        "Controlled bad release selected for the resilience test."
+        "Controlled unhealthy candidate release selected for the resilience test."
     );
 
     return res.status(202).json({
@@ -486,32 +549,39 @@ app.post("/api/system/version/chaos", (req, res) => {
     });
 });
 
-// ---------- INCIDENT HISTORY ----------
-
 app.get("/api/system/incidents", (req, res) => {
+    res.set("Cache-Control", "no-store");
+
     res.json({
         incidents: [...incidents].reverse(),
         recoveries: incidents.filter(
-            incident => incident.status === "recovered"
+            (incident) =>
+                String(incident.status).toLowerCase() === "recovered"
         ).length
     });
 });
 
-// ---------- AUTOMATIC WATCHDOG ----------
+// ==================================================
+// VERSION SELF-HEALING WATCHDOG
+// ==================================================
 
-const watchdog = setInterval(() => {
+setInterval(() => {
     const incident = incidents.find(
-        item => item.id === versionState.activeIncidentId
+        (item) =>
+            item.id === versionState.activeIncidentId
     );
 
-    if (!incident) return;
+    if (!incident) {
+        return;
+    }
 
-    // Stage 1: Detect
+    // 1. Detect failure
     if (!incident.detectedAt) {
         incident.detectedAt = new Date().toISOString();
 
         incident.detectionTimeMs =
-            Date.now() - new Date(incident.startedAt).getTime();
+            Date.now() -
+            new Date(incident.startedAt).getTime();
 
         incident.status = "detected";
 
@@ -525,7 +595,7 @@ const watchdog = setInterval(() => {
         return;
     }
 
-    // Stage 2: Diagnose
+    // 2. Diagnose failure
     if (!incident.diagnosedAt) {
         incident.diagnosedAt = new Date().toISOString();
 
@@ -539,11 +609,13 @@ const watchdog = setInterval(() => {
         return;
     }
 
-    // Stage 3: Recover
+    // 3. Recover automatically
     if (!incident.actionAt) {
         incident.actionAt = new Date().toISOString();
 
-        versionState.currentVersion = incident.previousVersion;
+        versionState.currentVersion =
+            incident.previousVersion;
+
         incident.status = "rollback_in_progress";
 
         addIncidentEvent(
@@ -556,22 +628,26 @@ const watchdog = setInterval(() => {
         return;
     }
 
-    // Stage 4: Verify
+    // 4. Verify recovery
     if (!incident.recoveredAt) {
         const versionRestored =
-            versionState.currentVersion === incident.previousVersion;
+            versionState.currentVersion ===
+            incident.previousVersion;
 
-        const databaseReady = isDatabaseReady();
-
-        if (!versionRestored || !databaseReady) {
+        if (
+            !versionRestored ||
+            !isDatabaseReady()
+        ) {
             updateVersionState("verifying");
             return;
         }
 
-        incident.recoveredAt = new Date().toISOString();
+        incident.recoveredAt =
+            new Date().toISOString();
 
         incident.recoveryTimeMs =
-            Date.now() - new Date(incident.startedAt).getTime();
+            Date.now() -
+            new Date(incident.startedAt).getTime();
 
         incident.status = "recovered";
 
@@ -588,70 +664,121 @@ const watchdog = setInterval(() => {
     }
 }, 1000);
 
-// ---------- END SELF-HEALING VERSION MANAGER ----------
+// ==================================================
+// LEAD VALIDATION HELPERS
+// ==================================================
 
-// ---------- LEAD MANAGEMENT ----------
-
-// Validate follow-up date
 function prepareFollowUpDate(value) {
-    if (value === undefined || value === null || value === "") {
+    if (
+        value === undefined ||
+        value === null ||
+        value === ""
+    ) {
         return null;
     }
 
     const date = new Date(value);
 
     if (Number.isNaN(date.getTime())) {
-        throw new Error("Please provide a valid follow-up date.");
+        throw new Error(
+            "Please provide a valid follow-up date."
+        );
     }
 
     return date;
 }
 
-// Create lead
+function prepareLeadData(body) {
+    const {
+        customerName,
+        companyName,
+        email,
+        phone,
+        interest,
+        status,
+        followUpDate,
+        notes
+    } = body;
 
+    if (
+        typeof customerName !== "string" ||
+        !customerName.trim() ||
+        typeof companyName !== "string" ||
+        !companyName.trim() ||
+        typeof interest !== "string" ||
+        !interest.trim()
+    ) {
+        throw new Error(
+            "Customer name, company name and interest are required."
+        );
+    }
+
+    const allowedStatuses = [
+        "New",
+        "Contacted",
+        "Qualified",
+        "Proposal",
+        "Won",
+        "Lost"
+    ];
+
+    const cleanStatus =
+        typeof status === "string" && status.trim()
+            ? status.trim()
+            : "New";
+
+    if (!allowedStatuses.includes(cleanStatus)) {
+        throw new Error(
+            "Please provide a valid lead status."
+        );
+    }
+
+    return {
+        customerName: customerName.trim(),
+        companyName: companyName.trim(),
+        email:
+            typeof email === "string"
+                ? email.trim().toLowerCase()
+                : "",
+        phone:
+            typeof phone === "string"
+                ? phone.trim()
+                : "",
+        interest: interest.trim(),
+        status: cleanStatus,
+        followUpDate: prepareFollowUpDate(followUpDate),
+        notes:
+            typeof notes === "string"
+                ? notes.trim()
+                : ""
+    };
+}
+
+function isValidationError(error) {
+    return (
+        error &&
+        ["ValidationError", "CastError"].includes(error.name)
+    );
+}
+
+// ==================================================
+// CREATE LEAD
+// ==================================================
 
 app.post("/api/leads", async (req, res) => {
+    let leadData;
+
     try {
-        console.log("CREATE LEAD CHECK:", {
-            mongoReadyState: mongoose.connection.readyState,
-            database: mongoose.connection.name,
-            collection: Lead.collection.name
+        leadData = prepareLeadData(req.body);
+    } catch (error) {
+        return res.status(400).json({
+            error: error.message
         });
+    }
 
-        const {
-            customerName,
-            companyName,
-            email,
-            phone,
-            interest,
-            status,
-            followUpDate,
-            notes
-        } = req.body;
-
-        if (
-            !customerName?.trim() ||
-            !companyName?.trim() ||
-            !interest?.trim()
-        ) {
-            return res.status(400).json({
-                error: "Customer name, company name and interest are required."
-            });
-        }
-
-        const leadData = {
-            customerName: customerName.trim(),
-            companyName: companyName.trim(),
-            email: email?.trim().toLowerCase() || "",
-            phone: phone?.trim() || "",
-            interest: interest.trim(),
-            status: status || "New",
-            followUpDate: prepareFollowUpDate(followUpDate),
-            notes: notes?.trim() || ""
-        };
-
-        // Save directly to MongoDB when connected
-        if (mongoose.connection.readyState === 1) {
+    // If database is connected, save directly to MongoDB.
+    if (isMongoAvailable()) {
+        try {
             const lead = await Lead.create(leadData);
 
             updateCachedLead(lead.toObject());
@@ -661,16 +788,38 @@ app.post("/api/leads", async (req, res) => {
                 lead,
                 pendingSync: false
             });
-        }
+        } catch (error) {
+            if (isValidationError(error)) {
+                return res.status(400).json({
+                    error: error.message
+                });
+            }
 
-        // Save locally and queue for automatic sync when offline
-        const id = new mongoose.Types.ObjectId().toString();
+            console.error(
+                "MongoDB create failed:",
+                error.message
+            );
+
+            if (isMongoAvailable()) {
+                return res.status(503).json({
+                    error: "MongoDB could not confirm saving this lead. Please retry."
+                });
+            }
+        }
+    }
+
+    // Database offline: save locally and queue for later.
+    try {
+        const id =
+            new mongoose.Types.ObjectId().toString();
+
+        const now = new Date().toISOString();
 
         const localLead = {
             ...leadData,
             _id: id,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            createdAt: now,
+            updatedAt: now,
             __v: 0
         };
 
@@ -683,100 +832,153 @@ app.post("/api/leads", async (req, res) => {
         });
 
         return res.status(202).json({
-            message: "Lead saved locally. It will sync automatically when the database reconnects.",
+            message: "Lead saved locally. It will sync automatically when MongoDB reconnects.",
             lead: localLead,
             pendingSync: true
         });
     } catch (error) {
-        console.error("Create lead failed:", error);
+        console.error(
+            "Local lead save failed:",
+            error.message
+        );
 
         return res.status(500).json({
-            error: error.message || "Unable to create lead."
+            error: "Lead could not be saved locally. Check the server data folder permissions."
         });
     }
 });
 
+// ==================================================
+// CUSTOMER LEADS
+// CONFIRMED DATABASE RECORDS ONLY
+// ==================================================
 
-// Get leads
-
- // Get leads with automatic local-cache fallback
 app.get("/api/leads", async (req, res) => {
+    res.set("Cache-Control", "no-store");
+
     try {
-        if (mongoose.connection.readyState === 1) {
+        const pendingCreateIds = getPendingCreateIds();
+        const pendingDeleteIds = getPendingDeleteIds();
+
+        if (isMongoAvailable()) {
             const databaseLeads = await Lead.find()
                 .sort({ createdAt: -1 })
                 .lean();
 
-            cachedLeads = mergePendingOperationsIntoLeads(
-                databaseLeads
+            const confirmedLeads = databaseLeads.filter(
+                (lead) => {
+                    const id = String(lead._id);
+
+                    return (
+                        !pendingCreateIds.has(id) &&
+                        !pendingDeleteIds.has(id)
+                    );
+                }
             );
 
-            saveLeadsCache();
-
             res.set("X-Data-Source", "mongodb");
-            return res.json(cachedLeads);
+
+            return res.json(confirmedLeads);
         }
 
-        res.set("X-Data-Source", "cache");
-        return res.json(cachedLeads);
+        // Database offline: only previously confirmed cached leads.
+        // A locally queued create must never appear here.
+        const confirmedCachedLeads =
+            getConfirmedCachedLeads();
 
+        res.set("X-Data-Source", "cache");
+
+        return res.json(confirmedCachedLeads);
     } catch (error) {
         console.error(
-            "Lead database read failed:",
+            "Customer leads read failed:",
             error.message
         );
 
-        res.set("X-Data-Source", "cache");
-
-        return res.json(cachedLeads);
+        return res.status(503).json({
+            error: "Customer leads could not be verified. Please retry."
+        });
     }
 });
-// Update lead
+
+// ==================================================
+// OFFLINE LEADS
+// PENDING OPERATIONS ONLY
+// ==================================================
+
+app.get("/api/leads/offline", (req, res) => {
+    const pendingLeads = new Map();
+
+    for (const operation of pendingLeadOperations) {
+        const id = String(operation.id);
+
+        if (operation.type === "create") {
+            pendingLeads.set(id, {
+                ...operation.data,
+                _id: id
+            });
+        } else if (operation.type === "update") {
+            const existingLead = pendingLeads.get(id);
+
+            if (existingLead) {
+                pendingLeads.set(id, {
+                    ...existingLead,
+                    ...operation.data,
+                    _id: id
+                });
+            }
+        } else if (operation.type === "delete") {
+            pendingLeads.delete(id);
+        }
+    }
+
+    const offlineLeads =
+        Array.from(pendingLeads.values()).map(
+            (lead) => ({
+                ...lead,
+                syncStatus: "Pending Sync"
+            })
+        );
+
+    res.set("Cache-Control", "no-store");
+
+    return res.json(offlineLeads);
+});
+
+// ==================================================
+// UPDATE LEAD
+// ==================================================
 
 app.put("/api/leads/:id", async (req, res) => {
+    let updatedData;
+
     try {
-        const {
-            customerName,
-            companyName,
-            email,
-            phone,
-            interest,
-            status,
-            followUpDate,
-            notes
-        } = req.body;
+        updatedData = prepareLeadData(req.body);
+    } catch (error) {
+        return res.status(400).json({
+            error: error.message
+        });
+    }
 
-        if (
-            !customerName?.trim() ||
-            !companyName?.trim() ||
-            !interest?.trim()
-        ) {
-            return res.status(400).json({
-                error: "Customer name, company name and interest are required."
-            });
-        }
+    const leadId = String(req.params.id);
 
-        const updatedData = {
-            customerName: customerName.trim(),
-            companyName: companyName.trim(),
-            email: email?.trim().toLowerCase() || "",
-            phone: phone?.trim() || "",
-            interest: interest.trim(),
-            status: status || "New",
-            followUpDate: prepareFollowUpDate(followUpDate),
-            notes: notes?.trim() || ""
-        };
+    if (!mongoose.isValidObjectId(leadId)) {
+        return res.status(400).json({
+            error: "Invalid lead ID."
+        });
+    }
 
-        // Normal database update
-        if (mongoose.connection.readyState === 1) {
-            const updatedLead = await Lead.findByIdAndUpdate(
-                req.params.id,
-                updatedData,
-                {
-                    new: true,
-                    runValidators: true
-                }
-            );
+    if (isMongoAvailable()) {
+        try {
+            const updatedLead =
+                await Lead.findByIdAndUpdate(
+                    leadId,
+                    updatedData,
+                    {
+                        new: true,
+                        runValidators: true
+                    }
+                );
 
             if (!updatedLead) {
                 return res.status(404).json({
@@ -791,110 +993,157 @@ app.put("/api/leads/:id", async (req, res) => {
                 lead: updatedLead,
                 pendingSync: false
             });
+        } catch (error) {
+            if (isValidationError(error)) {
+                return res.status(400).json({
+                    error: error.message
+                });
+            }
+
+            console.error(
+                "MongoDB update failed:",
+                error.message
+            );
+
+            if (isMongoAvailable()) {
+                return res.status(503).json({
+                    error: "MongoDB could not confirm this update. Please retry."
+                });
+            }
         }
+    }
 
-        // Offline update: modify the cached lead
-        const existingLead = findCachedLead(req.params.id);
+    const existingLead = findCachedLead(leadId);
 
-        if (!existingLead) {
-            return res.status(404).json({
-                error: "Lead is not available in the local cache."
-            });
-        }
-
-        const updatedLead = {
-            ...existingLead,
-            ...updatedData,
-            updatedAt: new Date().toISOString()
-        };
-
-        updateCachedLead(updatedLead);
-
-        queueLeadOperation({
-            type: "update",
-            id: String(req.params.id),
-            data: updatedData
-        });
-
-        return res.status(202).json({
-            message: "Lead updated locally. Changes will sync automatically.",
-            lead: updatedLead,
-            pendingSync: true
-        });
-    } catch (error) {
-        return res.status(400).json({
-            error: error.message || "Unable to update lead."
+    if (!existingLead) {
+        return res.status(404).json({
+            error: "Lead is not available in the local cache."
         });
     }
+
+    const updatedLead = {
+        ...existingLead,
+        ...updatedData,
+        updatedAt: new Date().toISOString()
+    };
+
+    updateCachedLead(updatedLead);
+
+    queueLeadOperation({
+        type: "update",
+        id: leadId,
+        data: updatedData
+    });
+
+    return res.status(202).json({
+        message: "Lead updated locally. Changes will sync automatically.",
+        lead: updatedLead,
+        pendingSync: true
+    });
 });
 
-       
+// ==================================================
+// CUSTOMER ACTIVITIES
+// ==================================================
 
-// Add activity to a lead
-app.post("/api/leads/:id/activities", async (req, res) => {
-    try {
-        const { type, description } = req.body;
+app.post(
+    "/api/leads/:id/activities",
+    async (req, res) => {
+        try {
+            const { type, description } = req.body;
 
-        const allowedTypes = [
-            "Call",
-            "Email",
-            "Meeting",
-            "Note",
-            "Other"
-        ];
-        
-        if (!description || !description.trim()) {
-            return res.status(400).json({
-                error: "Activity description is required."
+            const allowedTypes = [
+                "Call",
+                "Email",
+                "Meeting",
+                "Note",
+                "Other"
+            ];
+
+            if (
+                typeof description !== "string" ||
+                !description.trim()
+            ) {
+                return res.status(400).json({
+                    error: "Activity description is required."
+                });
+            }
+
+            if (
+                type &&
+                !allowedTypes.includes(type)
+            ) {
+                return res.status(400).json({
+                    error: "Invalid activity type."
+                });
+            }
+
+            if (!isMongoAvailable()) {
+                return res.status(503).json({
+                    error: "Customer activities require an active database connection. Your lead data is still available in the local cache."
+                });
+            }
+
+            const lead = await Lead.findById(
+                req.params.id
+            );
+
+            if (!lead) {
+                return res.status(404).json({
+                    error: "Customer lead not found."
+                });
+            }
+
+            if (!Array.isArray(lead.activities)) {
+                lead.activities = [];
+            }
+
+            lead.activities.push({
+                type: type || "Note",
+                description: description.trim(),
+                createdAt: new Date()
+            });
+
+            await lead.save();
+
+            return res.status(201).json({
+                message: "Activity saved successfully.",
+                activity:
+                    lead.activities[
+                        lead.activities.length - 1
+                    ]
+            });
+        } catch (error) {
+            const statusCode =
+                error.name === "CastError" ? 400 : 500;
+
+            return res.status(statusCode).json({
+                error:
+                    statusCode === 400
+                        ? "Invalid customer ID."
+                        : "Unable to save activity."
             });
         }
-
-        if (type && !allowedTypes.includes(type)) {
-            return res.status(400).json({
-                error: "Invalid activity type."
-            });
-        }
-
-        const lead = await Lead.findById(req.params.id);
-
-        if (!lead) {
-            return res.status(404).json({
-                error: "Customer lead not found."
-            });
-        }
-
-        lead.activities.push({
-            type: type || "Note",
-            description: description.trim(),
-            createdAt: new Date()
-        });
-
-        await lead.save();
-
-        res.status(201).json({
-            message: "Activity saved successfully.",
-            activity: lead.activities[lead.activities.length - 1]
-        });
-    } catch (error) {
-        const statusCode = error.name === "CastError" ? 400 : 500;
-
-        res.status(statusCode).json({
-            error: statusCode === 400
-                ? "Invalid customer ID."
-                : "Unable to save activity."
-        });
     }
-});
+);
 
-// Delete lead
+// ==================================================
+// DELETE LEAD
+// ==================================================
 
 app.delete("/api/leads/:id", async (req, res) => {
-    try {
-        const leadId = String(req.params.id);
+    const leadId = String(req.params.id);
 
-        // Normal delete when MongoDB is connected
-        if (mongoose.connection.readyState === 1) {
-            const deletedLead = await Lead.findByIdAndDelete(leadId);
+    if (!mongoose.isValidObjectId(leadId)) {
+        return res.status(400).json({
+            error: "Invalid lead ID."
+        });
+    }
+
+    if (isMongoAvailable()) {
+        try {
+            const deletedLead =
+                await Lead.findByIdAndDelete(leadId);
 
             if (!deletedLead) {
                 return res.status(404).json({
@@ -908,208 +1157,325 @@ app.delete("/api/leads/:id", async (req, res) => {
                 message: "Lead deleted successfully.",
                 pendingSync: false
             });
-        }
-
-        // Offline delete using the local cache
-        const existingLead = findCachedLead(leadId);
-
-        if (!existingLead) {
-            return res.status(404).json({
-                error: "Lead is not available in the local cache."
-            });
-        }
-
-        removeCachedLead(leadId);
-
-        queueLeadOperation({
-            type: "delete",
-            id: leadId
-        });
-
-        return res.status(202).json({
-            message: "Lead removed locally. Deletion will sync automatically when MongoDB reconnects.",
-            pendingSync: true
-        });
-    } catch (error) {
-        return res.status(400).json({
-            error: error.message || "Unable to delete lead."
-        });
-    }
-});
-
-
-
-app.get("/api/system/data-status", async (req, res) => {
-    const databaseConnected =
-        mongoose.connection.readyState === 1;
-
-    if (databaseConnected) {
-        try {
-            const databaseLeads = await Lead.find()
-                .sort({ createdAt: -1 })
-                .lean();
-
-            cachedLeads = mergePendingOperationsIntoLeads(
-                databaseLeads
-            );
-
-            saveLeadsCache();
-
         } catch (error) {
             console.error(
-                "Status check could not refresh cache:",
+                "MongoDB delete failed:",
                 error.message
             );
+
+            if (isMongoAvailable()) {
+                return res.status(503).json({
+                    error: "MongoDB could not confirm this deletion. Please retry."
+                });
+            }
         }
     }
 
-    const connected =
-        mongoose.connection.readyState === 1;
+    const existingLead = findCachedLead(leadId);
 
-    res.json({
-        app: "SaleSphere",
-        database: connected ? "Connected" : "Disconnected",
-        databaseConnected: connected,
-        cacheAvailable: Array.isArray(cachedLeads),
-        cachedLeadCount: cachedLeads.length,
-        pendingSyncCount: pendingLeadOperations.length,
-        recoveryMode: !connected
-            ? "Recovering"
-            : pendingLeadOperations.length > 0
-                ? "Syncing"
-                : "Healthy"
+    if (!existingLead) {
+        return res.status(404).json({
+            error: "Lead is not available in the local cache."
+        });
+    }
+
+    removeCachedLead(leadId);
+
+    queueLeadOperation({
+        type: "delete",
+        id: leadId
+    });
+
+    return res.status(202).json({
+        message: "Lead removed locally. Deletion will sync automatically when MongoDB reconnects.",
+        pendingSync: true
     });
 });
 
+// ==================================================
+// DATABASE STATUS AND CACHE
+// ==================================================
 
+app.get(
+    "/api/system/data-status",
+    async (req, res) => {
+        const connected = isMongoAvailable();
 
+        // Do not overwrite the local cache with unconfirmed
+        // pending data while operations are waiting for sync.
+        if (
+            connected &&
+            pendingLeadOperations.length === 0
+        ) {
+            try {
+                cachedLeads = await Lead.find()
+                    .sort({ createdAt: -1 })
+                    .lean();
 
-app.post("/api/system/database/chaos", async (req, res) => {
-    if (process.env.NODE_ENV === "production") {
-        return res.status(403).json({
-            error: "Failure injection is disabled in production."
+                saveLeadsCache();
+            } catch (error) {
+                console.error(
+                    "Status check could not refresh cache:",
+                    error.message
+                );
+            }
+        }
+
+        res.set("Cache-Control", "no-store");
+
+        res.json({
+            app: "SaleSphere",
+            database: isMongoAvailable()
+                ? "Connected"
+                : "Disconnected",
+            databaseConnected: isMongoAvailable(),
+            cacheAvailable: Array.isArray(cachedLeads),
+            cachedLeadCount: getConfirmedCachedLeads().length,
+            pendingSyncCount: pendingLeadOperations.length,
+            recoveryMode: !isMongoAvailable()
+                ? "Recovering"
+                : pendingLeadOperations.length > 0
+                    ? "Syncing"
+                    : "Healthy"
         });
     }
-
-    const isLocalRequest = [
-        "127.0.0.1",
-        "::1",
-        "::ffff:127.0.0.1"
-    ].includes(req.ip);
-
-    if (!isLocalRequest) {
-        return res.status(403).json({
-            error: "Only localhost can inject a demo failure."
-        });
-    }
-
-    if (mongoose.connection.readyState !== 1) {
-        return res.status(409).json({
-            error: "MongoDB is already disconnected or reconnecting."
-        });
-    }
-
-    const incident = {
-        id: new mongoose.Types.ObjectId().toString(),
-        type: "MongoDB Connection Failure",
-        status: "Detected",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        events: []
-    };
-
-    incidents.push(incident);
-
-    addIncidentEvent(
-        incident,
-        "Detected",
-        "Controlled MongoDB connection failure requested from the local demo."
-    );
-
-    addIncidentEvent(
-        incident,
-        "Diagnosing",
-        "Checking MongoDB connection state and starting the recovery policy."
-    );
-
-    chaosModeUntil = Date.now() + 8000;
-
-    addIncidentEvent(
-        incident,
-        "Recovering",
-        "SaleSphere will retry the database connection automatically."
-    );
-
-    try {
-        await mongoose.disconnect();
-
-        return res.json({
-            message: "Controlled failure injected.",
-            incidentId: incident.id,
-            status: incident.status,
-            recoveryExpectedInSeconds: 8
-        });
-    } catch (error) {
-        chaosModeUntil = 0;
-
-        updateIncidentStatus(
-            incident,
-            "Recovery Failed",
-            error.message
-        );
-
-        return res.status(500).json({
-            error: "Failure injection could not complete.",
-            incidentId: incident.id
-        });
-    }
-});
-
-       
-
-// ---------- START SERVER ----------
-
-
- // ---------- START SERVER + AUTO RECONNECT ----------
-
-const mongoURI =
-    process.env.MONGODB_URI ||
-    "mongodb://127.0.0.1:27017/salesphere";
-
-    console.log("Atlas URI loaded:", !!process.env.MONGODB_URI);
-console.log("URI starts with Atlas:", process.env.MONGODB_URI?.startsWith("mongodb+srv://"));
-console.log("Using local fallback:", mongoURI.startsWith("mongodb://127.0.0.1"));
-
-let reconnectTimer = null;
-let reconnectDelay = 1000;
-let chaosModeUntil = 0;
-let activeMongoIncidentId = null;
-let isConnecting = false;
-
-function scheduleReconnect() {
-    if (reconnectTimer) return;
-
-    const delay = Math.max(
-    reconnectDelay,
-    chaosModeUntil - Date.now()
 );
 
+// ==================================================
+// DATABASE CHAOS / SELF-HEALING DEMO
+// ==================================================
+
+app.post(
+    "/api/system/database/chaos",
+    async (req, res) => {
+        if (process.env.NODE_ENV === "production") {
+            return res.status(403).json({
+                error: "Failure injection is disabled in production."
+            });
+        }
+
+        const isLocalRequest = [
+            "127.0.0.1",
+            "::1",
+            "::ffff:127.0.0.1"
+        ].includes(req.ip);
+
+        if (!isLocalRequest) {
+            return res.status(403).json({
+                error: "Only localhost can inject a demo failure."
+            });
+        }
+
+        if (activeMongoIncidentId) {
+            return res.status(409).json({
+                error: "A database recovery is already in progress.",
+                incidentId: activeMongoIncidentId
+            });
+        }
+
+        if (!isMongoAvailable()) {
+            return res.status(409).json({
+                error: "MongoDB is already disconnected or reconnecting."
+            });
+        }
+
+        const incident = {
+            id: new mongoose.Types.ObjectId().toString(),
+            type: "MongoDB Connection Failure",
+            status: "Detected",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            recoveryTimeMs: null,
+            events: []
+        };
+
+        incidents.push(incident);
+        activeMongoIncidentId = incident.id;
+
+        addIncidentEvent(
+            incident,
+            "Detected",
+            "Controlled MongoDB connection failure requested from the local demo."
+        );
+
+        addIncidentEvent(
+            incident,
+            "Diagnosing",
+            "Connection state checked; automatic recovery policy selected."
+        );
+
+        chaosModeUntil = Date.now() + 8000;
+
+        addIncidentEvent(
+            incident,
+            "Recovering",
+            "SaleSphere will retry the MongoDB connection automatically."
+        );
+
+        try {
+            await mongoose.disconnect();
+
+            // Schedule after the intentional disconnect.
+            scheduleReconnect();
+
+            return res.status(202).json({
+                message: "Controlled failure injected. Automatic recovery has started.",
+                incidentId: incident.id,
+                status: incident.status,
+                recoveryExpectedInSeconds: 8
+            });
+        } catch (error) {
+            chaosModeUntil = 0;
+
+            updateIncidentStatus(
+                incident,
+                "Recovery Failed",
+                error.message
+            );
+
+            activeMongoIncidentId = null;
+
+            return res.status(500).json({
+                error: "Failure injection could not complete.",
+                incidentId: incident.id
+            });
+        }
+    }
+);
+
+// ==================================================
+// MONGODB CONNECTION AND AUTOMATIC RECONNECT
+// NOTE: Only ONE connectMongoDB function is defined.
+// ==================================================
+
+function scheduleReconnect() {
+    if (
+        reconnectTimer ||
+        isConnecting ||
+        isMongoAvailable()
+    ) {
+        return;
+    }
+
+    const remainingChaosDelay = Math.max(
+        0,
+        chaosModeUntil - Date.now()
+    );
+
+    const delay = Math.max(
+        reconnectDelay,
+        remainingChaosDelay
+    );
+
     console.log(
-        `SaleSphere will retry MongoDB connection in ${delay / 1000} seconds.`
+        `MongoDB reconnect scheduled in ${(delay / 1000).toFixed(1)} seconds.`
     );
 
     reconnectTimer = setTimeout(() => {
         reconnectTimer = null;
-        connectMongoDB();
+        void connectMongoDB();
     }, delay);
 
-    reconnectDelay = Math.min(reconnectDelay * 2, 15000);
+    reconnectDelay = Math.min(
+        reconnectDelay * 2,
+        15000
+    );
+}
+
+async function verifyMongoRecovery() {
+    if (
+        !activeMongoIncidentId ||
+        recoveryVerificationRunning
+    ) {
+        return;
+    }
+
+    const incident = incidents.find(
+        (item) => item.id === activeMongoIncidentId
+    );
+
+    if (!incident) {
+        activeMongoIncidentId = null;
+        chaosModeUntil = 0;
+        return;
+    }
+
+    recoveryVerificationRunning = true;
+
+    try {
+        if (!isMongoAvailable()) {
+            throw new Error(
+                "MongoDB is not connected yet."
+            );
+        }
+
+        // Verify that MongoDB can respond to a real query.
+        await Lead.countDocuments();
+
+        // Drain the queue before declaring recovery successful.
+        if (pendingLeadOperations.length > 0) {
+            await syncPendingLeadOperations();
+        }
+
+        if (pendingLeadOperations.length > 0) {
+            throw new Error(
+                "Pending lead operations are still waiting to sync."
+            );
+        }
+
+        // Refresh the cache with database-confirmed records.
+        cachedLeads = await Lead.find()
+            .sort({ createdAt: -1 })
+            .lean();
+
+        saveLeadsCache();
+
+        updateIncidentStatus(
+            incident,
+            "Verifying",
+            "MongoDB query succeeded and all queued lead operations are synchronized."
+        );
+
+        incident.recoveryTimeMs =
+            Date.now() -
+            new Date(incident.createdAt).getTime();
+
+        updateIncidentStatus(
+            incident,
+            "Recovered",
+            "Database verification passed and all queued lead operations are synchronized."
+        );
+
+        activeMongoIncidentId = null;
+        chaosModeUntil = 0;
+
+        console.log(
+            "SELF-HEALING VERIFIED: SaleSphere database recovery succeeded."
+        );
+    } catch (error) {
+        console.error(
+            "Database recovery verification failed:",
+            error.message
+        );
+
+        if (incident.status !== "Verification Failed") {
+            updateIncidentStatus(
+                incident,
+                "Verification Failed",
+                error.message
+            );
+        }
+
+        // Keep the incident active so the watchdog can retry.
+    } finally {
+        recoveryVerificationRunning = false;
+    }
 }
 
 async function connectMongoDB() {
     if (
         isConnecting ||
-        mongoose.connection.readyState === 1
+        isMongoAvailable()
     ) {
         return;
     }
@@ -1117,94 +1483,384 @@ async function connectMongoDB() {
     isConnecting = true;
 
     try {
+        // Respect the intentional demo failure delay.
+        const remainingChaosDelay = Math.max(
+            0,
+            chaosModeUntil - Date.now()
+        );
+
+        if (remainingChaosDelay > 0) {
+            await new Promise((resolve) => {
+                setTimeout(resolve, remainingChaosDelay);
+            });
+        }
+
         await mongoose.connect(mongoURI, {
             serverSelectionTimeoutMS: 5000
         });
 
-        console.log("Connected database:", mongoose.connection.name);
-console.log("Connected host:", mongoose.connection.host);
+        console.log(
+            "Connected database:",
+            mongoose.connection.name
+        );
+
+        console.log(
+            "Connected host:",
+            mongoose.connection.host
+        );
+
+        console.log("MongoDB connected successfully.");
+
         reconnectDelay = 1000;
-console.log("MongoDB connected successfully");
 
-// Sync offline changes before verifying recovery
-if (pendingLeadOperations.length > 0) {
-    await syncPendingLeadOperations();
-}
+        // Synchronize pending offline operations first.
+        if (pendingLeadOperations.length > 0) {
+            await syncPendingLeadOperations();
+        }
 
-// Verify the actual database connection and recovery
-if (activeMongoIncidentId) {
-    const incident = incidents.find(
-        (item) => item.id === activeMongoIncidentId
-    );
+        // Verify the incident only after the queue is drained.
+        if (
+            activeMongoIncidentId &&
+            pendingLeadOperations.length === 0
+        ) {
+            await verifyMongoRecovery();
+        }
 
-    if (incident) {
-        try {
-            await Lead.countDocuments();
+        // Refresh confirmed cache only when there is no
+        // remaining offline queue.
+        if (
+            pendingLeadOperations.length === 0 &&
+            !activeMongoIncidentId &&
+            isMongoAvailable()
+        ) {
+            cachedLeads = await Lead.find()
+                .sort({ createdAt: -1 })
+                .lean();
 
-            if (pendingLeadOperations.length === 0) {
-                updateIncidentStatus(
-                    incident,
-                    "Verifying",
-                    "MongoDB reconnected. Database read verification succeeded."
-                );
+            saveLeadsCache();
+        }
+    } catch (error) {
+        console.error(
+            "MongoDB connection/recovery failed:",
+            error.message
+        );
+    } finally {
+        // IMPORTANT: release the lock BEFORE scheduling retry.
+        isConnecting = false;
 
-                incident.recoveryTimeMs =
-                    Date.now() -
-                    new Date(incident.createdAt).getTime();
+        if (!isMongoAvailable()) {
+            scheduleReconnect();
+        } else if (
+            pendingLeadOperations.length > 0
+        ) {
+            setTimeout(() => {
+                if (isMongoAvailable()) {
+                    void syncPendingLeadOperations();
+                }
+            }, 1000);
+        }
 
-                updateIncidentStatus(
-                    incident,
-                    "Recovered",
-                    "Database verification passed and all queued lead operations are synced."
-                );
-
-                console.log(
-                    "SELF-HEALING VERIFIED: SaleSphere recovered successfully."
-                );
-
-                activeMongoIncidentId = null;
-            } else {
-                console.log(
-                    "MongoDB is connected"
-                );
-            }
-        } catch (verificationError) {
-            console.error(
-                "Recovery verification failed:",
-                verificationError.message
-            );
-
-            updateIncidentStatus(
-                incident,
-                "Verification Failed",
-                verificationError.message
-            );
+        if (
+            activeMongoIncidentId &&
+            isMongoAvailable()
+        ) {
+            setTimeout(() => {
+                void verifyMongoRecovery();
+            }, 500);
         }
     }
 }
-    } catch (error) {
-        console.error(
-            "MongoDB connection failed:",
-            error.message
+// ==================================================
+// EMAIL SERVICE SELF-HEALING DEMO
+// ==================================================
+
+/* EMAIL SERVICE SELF-HEALING */
+
+
+
+/* EMAIL SERVICE SELF-HEALING */
+let simulateNextEmailFailure = false;
+
+const emailRecoveryState = {
+    status: "Healthy",
+    stage: "idle",
+    message: "Email service is ready.",
+    incidentId: null,
+    detectedAt: null,
+    recoveredAt: null,
+    detectionTimeMs: null,
+    recoveryTimeMs: null,
+    lastResult: null
+};
+
+const emailWait = (ms) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+
+app.post("/api/system/email-failure", (req, res) => {
+    simulateNextEmailFailure = true;
+
+    res.json({
+        success: true,
+        message: "Email failure armed. Send a follow-up email to test recovery."
+    });
+});
+
+app.get("/api/system/email-recovery-status", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    res.json({ ...emailRecoveryState });
+});
+
+async function sendEmailWithSelfHealing(mailOptions) {
+    if (!simulateNextEmailFailure) {
+        await emailTransporter.sendMail(mailOptions);
+
+        emailRecoveryState.status = "Healthy";
+        emailRecoveryState.stage = "idle";
+        emailRecoveryState.message = "Email sent successfully.";
+        emailRecoveryState.lastResult = "sent";
+
+        return { recovered: false, attempts: 1 };
+    }
+
+    simulateNextEmailFailure = false;
+
+    const startedAt = Date.now();
+    const incidentId = `EMAIL-${Date.now()}`;
+
+    Object.assign(emailRecoveryState, {
+        status: "Failed",
+        stage: "detected",
+        message: "Email delivery failure detected.",
+        incidentId,
+        detectedAt: new Date().toISOString(),
+        recoveredAt: null,
+        detectionTimeMs: 0,
+        recoveryTimeMs: null,
+        lastResult: null
+    });
+
+    emailRecoveryState.detectionTimeMs = Date.now() - startedAt;
+
+    console.error(`[PatchPilot] ${incidentId}: Email failure detected.`);
+
+    try {
+
+        emailRecoveryState.stage = "detected";
+        emailRecoveryState.status = "Failed";
+        emailRecoveryState.message =
+            "Email delivery failure detected. PatchPilot is investigating.";
+
+        console.log(`[PatchPilot] ${incidentId}: Failure detected.`);
+
+        await emailWait(1000);
+
+        emailRecoveryState.stage = "diagnosed";
+        emailRecoveryState.message =
+            "PatchPilot diagnosed the simulated email service failure.";
+
+        console.log(`[PatchPilot] ${incidentId}: Diagnosed.`);
+
+        await emailWait(1000);
+
+        emailRecoveryState.status = "Recovering";
+        emailRecoveryState.stage = "recovering";
+        emailRecoveryState.message =
+            "PatchPilot is attempting automatic recovery.";
+
+        console.log(`[PatchPilot] ${incidentId}: Recovery started.`);
+
+        // Keep total recovery time around 30 seconds.
+        await emailWait(
+            Math.max(0, 25000 - (Date.now() - startedAt))
         );
 
-        scheduleReconnect();
-    } finally {
-        isConnecting = false;
+
+        // The injected one-time fault has been cleared.
+        // Send the actual email and only mark green on success.
+        await emailTransporter.sendMail(mailOptions);
+
+        Object.assign(emailRecoveryState, {
+            status: "Healthy",
+            stage: "recovered",
+            message: "Email service recovered. Email sent successfully.",
+            recoveredAt: new Date().toISOString(),
+            recoveryTimeMs: Date.now() - startedAt,
+            lastResult: "sent"
+        });
+
+        console.log(
+            `[PatchPilot] ${incidentId}: Recovered in ${emailRecoveryState.recoveryTimeMs}ms.`
+        );
+
+        return { recovered: true, attempts: 2 };
+    } catch (error) {
+        Object.assign(emailRecoveryState, {
+            status: "Failed",
+            stage: "failed",
+            message: `Automatic recovery failed: ${error.message}`,
+            recoveryTimeMs: Date.now() - startedAt,
+            lastResult: "failed"
+        });
+
+        console.error(`[PatchPilot] ${incidentId}: Recovery failed.`, error);
+
+        throw error;
     }
 }
 
+// ==================================================
+// SEND FOLLOW-UP EMAIL
+// ==================================================
+
+app.post("/api/followups/:leadId/send-email", async (req, res) => {
+    try {
+        if (!emailTransporter) {
+            return res.status(503).json({
+                error: "Email is not configured. Please check the email settings."
+            });
+        }
+
+        if (!isMongoAvailable()) {
+            return res.status(503).json({
+                error: "Database is temporarily unavailable. Please try again."
+            });
+        }
+
+        const { leadId } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(leadId)) {
+            return res.status(400).json({
+                error: "Invalid customer ID."
+            });
+        }
+
+        const lead = await Lead.findById(leadId);
+
+        if (!lead) {
+            return res.status(404).json({
+                error: "Customer not found."
+            });
+        }
+
+        if (
+            !lead.email ||
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(lead.email)
+        ) {
+            return res.status(400).json({
+                error: "Please add a valid email address for this customer."
+            });
+        }
+
+        const recovery = await sendEmailWithSelfHealing({
+            from: process.env.EMAIL_USER,
+            to: lead.email,
+            subject: `Follow-up Reminder from SaleSphere${lead.companyName ? ` - ${lead.companyName}` : ""}`,
+            text: `Hello ${lead.customerName},
+
+This is a follow-up reminder from SaleSphere.
+
+${lead.companyName ? `Company: ${lead.companyName}\n` : ""}Interest: ${lead.interest || "Not specified"}
+Status: ${lead.status || "New"}
+${lead.followUpDate ? `Follow-up Date: ${String(lead.followUpDate).slice(0, 10)}\n` : ""}
+We look forward to connecting with you.
+
+Regards,
+SaleSphere Team`
+        });
+
+        console.log(`Follow-up email sent to ${lead.email}`);
+
+        return res.json({
+    success: true,
+    recovered: recovery.recovered,
+    attempts: recovery.attempts,
+    message: recovery.recovered
+        ? `Email service recovered automatically. Email sent to ${lead.email}.`
+        : `Follow-up email sent successfully to ${lead.email}.`
+});
+    } catch (error) {
+        console.error("Follow-up email failed:", error.message);
+
+        return res.status(500).json({
+            error: "Email could not be sent. Please try again."
+        });
+    }
+});
+
+// ==================================================
+// MONGODB CONNECTION EVENTS
+// ==================================================
+
 mongoose.connection.on("disconnected", () => {
-    console.warn("MongoDB disconnected. recovery started.");
+    console.warn(
+        "MongoDB disconnected. Automatic recovery started."
+    );
+
     scheduleReconnect();
 });
 
 mongoose.connection.on("error", (error) => {
-    console.error("MongoDB connection error:", error.message);
+    console.error(
+        "MongoDB connection error:",
+        error.message
+    );
 });
 
-// Start the web server even when MongoDB is unavailable.
+mongoose.connection.on("connected", () => {
+    console.log("MongoDB connection established.");
+});
+
+// ==================================================
+// AUTOMATIC SYNC AND RECOVERY WATCHDOG
+// ==================================================
+
+setInterval(async () => {
+    if (!isMongoAvailable()) {
+        return;
+    }
+
+    if (pendingLeadOperations.length > 0) {
+        await syncPendingLeadOperations();
+    }
+
+    if (
+        activeMongoIncidentId &&
+        pendingLeadOperations.length === 0
+    ) {
+        await verifyMongoRecovery();
+    }
+}, 3000);
+
+// If disconnected and no reconnect timer exists, schedule a retry.
+setInterval(() => {
+    if (!isMongoAvailable()) {
+        scheduleReconnect();
+    }
+}, 5000);
+
+// ==================================================
+// START SERVER
+// ==================================================
+
+console.log(
+    "MongoDB URI configured:",
+    Boolean(process.env.MONGODB_URI)
+);
+
+console.log(
+    "Atlas URI configured:",
+    process.env.MONGODB_URI?.startsWith("mongodb+srv://") || false
+);
+
+console.log(
+    "Using local fallback:",
+    !process.env.MONGODB_URI
+);
+
 app.listen(PORT, () => {
-    console.log(`SaleSphere running at http://localhost:${PORT}`);
-    connectMongoDB();
+    console.log(
+        `SaleSphere running at http://localhost:${PORT}`
+    );
+
+    void connectMongoDB();
 });

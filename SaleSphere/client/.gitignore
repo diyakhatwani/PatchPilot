@@ -22,3 +22,21 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Local runtime data
+data/incidents.json
+data/leads-cache.json
+data/pending-lead-operations.json
+
+@"
+
+# Local runtime data
+SaleSphere/data/incidents.json
+SaleSphere/data/leads-cache.json
+SaleSphere/data/pending-lead-operations.json
+"@ | Add-Content .gitignore
