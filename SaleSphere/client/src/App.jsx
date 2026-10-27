@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo,   useRef,useState } from "react";
+﻿import React, { useCallback, useEffect, useMemo,   useRef,useState } from "react";
 import "./App.css";
 
 const API = "/api/leads";
@@ -23,7 +23,7 @@ const NAV_ITEMS = [
   { id: "health", label: "System Health", icon: "♥" },
   { id: "versions", label: "Version Manager", icon: "↻" },
   { id: "offlineLeads", label: "Offline Leads", icon: "⇄" },
-  { id: "incidents", label: "Incidents", icon: "⚠" },
+  { id: "incidents", label: "Incidents", icon: "âš " },
 ];
 
 function getErrorMessage(data, fallback) {
@@ -49,11 +49,7 @@ function normaliseIncidents(data) {
   return [];
 }
 
-/*
- * Offline endpoints may return an array, { leads: [] },
- * { pending: [] }, { operations: [] }, or wrapped lead objects.
- * Preserve queue metadata while unwrapping the actual lead.
- */
+
 function normaliseLeads(data) {
   let items = [];
 
@@ -119,11 +115,7 @@ function leadId(lead) {
   );
 }
 
-/*
- * Only synchronization flags are checked here.
- * A normal sales status such as "New" or "Qualified"
- * must not accidentally be treated as an offline status.
- */
+
 function isPendingSyncLead(lead) {
   if (!lead || typeof lead !== "object") return false;
 
@@ -184,11 +176,7 @@ function sameLead(left, right) {
     return true;
   }
 
-  /*
-   * Fallback for offline records without a shared ID.
-   * Compare stable customer details only when both records
-   * contain enough information to identify the same lead.
-   */
+  
   const leftEmail = String(left?.email || "").trim().toLowerCase();
   const rightEmail = String(right?.email || "").trim().toLowerCase();
 
@@ -573,6 +561,18 @@ useEffect(() => {
   const [dbChaosMessage, setDbChaosMessage] = useState(
     "Ready to monitor database recovery."
   );
+  const [apiRecovery, setApiRecovery] = useState({
+    status: "Healthy",
+    stage: "idle",
+    message: "API is operating normally.",
+    incidentId: null,
+    incidents: [],
+  });
+  const [apiRecoveryBusy, setApiRecoveryBusy] = useState(false);
+  
+const [unrecoverableIncident, setUnrecoverableIncident] = useState(null);
+const [unrecoverableBusy, setUnrecoverableBusy] = useState(false);
+
   const [emailRecovery, setEmailRecovery] = useState({
   status: "Healthy",
   stage: "idle",
@@ -601,11 +601,7 @@ useEffect(() => {
     window.setTimeout(() => setToast(""), 3500);
   }, []);
 
-  /*
-   * Load the customer list and offline queue together.
-   * A lead found in the pending queue must never be included
-   * in Customer Leads, Dashboard counts, Follow-ups or Pipeline.
-   */
+  
   const loadLeads = useCallback(async () => {
     const [customerResult, offlineResult] = await Promise.allSettled([
       fetch(API, { cache: "no-store" }),
@@ -643,10 +639,7 @@ useEffect(() => {
 
     setOfflineLeads(pending);
 
-    /*
-     * Remove any lead that still appears in the customer response
-     * but is also present in the offline queue.
-     */
+    
     setLeads((current) =>
       removePendingFromCustomerLeads(current, pending)
     );
@@ -1021,10 +1014,6 @@ const sendFollowUpEmail = async (lead) => {
         }
       }
 
-      /*
-       * The backend remains the source of truth. Reload both lists
-       * so a lead only moves after the server reports it as synced.
-       */
       await Promise.allSettled([
         loadLeads(),
         loadOfflineLeads(),
@@ -1046,16 +1035,9 @@ const sendFollowUpEmail = async (lead) => {
     }
   };
 
-  const deleteLead = async (lead) => {
-    if (
-      !window.confirm(
-        `Delete lead for ${lead.customerName || "this customer"}?`
-      )
-    ) {
-      return;
-    }
-
+const deleteLead = async (lead) => {
     const id = leadId(lead);
+
 
     if (!id) {
       notify("Could not identify this lead. Refresh the list and retry.");
@@ -1078,7 +1060,7 @@ const sendFollowUpEmail = async (lead) => {
       );
 
       if (profileLead && leadId(profileLead) === id) {
-        setProfileLead(null);
+        setProfil1qiueLead(null);
       }
 
       await Promise.allSettled([loadLeads(), loadOfflineLeads()]);
@@ -1120,7 +1102,7 @@ const sendFollowUpEmail = async (lead) => {
         setActivities(Array.isArray(data) ? data : data?.activities || []);
       }
     } catch {
-      // Keep the profile open if activity history is unavailable.
+     
     }
   };
 
@@ -1503,7 +1485,7 @@ const sendFollowUpEmail = async (lead) => {
               <span>{health.app}</span>
             </div>
           </div>
-          <p>SaleSphere · Self-Healing Demo</p>
+          <p>SaleSphere Â· Self-Healing Demo</p>
         </div>
       </aside>
 
@@ -1952,11 +1934,6 @@ const sendFollowUpEmail = async (lead) => {
     Update
   </button>
 </td>
-
-
-
-
-
                             </tr>
                           ))}
                       </tbody>
@@ -1967,70 +1944,178 @@ const sendFollowUpEmail = async (lead) => {
             </>
           )}
 
-          {activePage === "pipeline" && (
-            <>
-              <PageHeader
-                title="Sales Pipeline"
-                subtitle="Track leads through each stage of your sales process."
-              />
+            
+{activePage === "pipeline" && (
+  <>
+    <PageHeader
+      title="Sales Pipeline"
+      subtitle="A clear view of every customer and where each deal stands."
+    />
 
-              <div className="pipeline-grid">
-                {[
-                  { status: "New", color: "blue" },
-                  { status: "Contacted", color: "purple" },
-                  { status: "Qualified", color: "orange" },
-                  { status: "Proposal", color: "blue" },
-                  { status: "Won", color: "green" },
-                  { status: "Lost", color: "red" },
-                ].map((stage) => {
-                  const stageLeads = leads.filter(
-                    (lead) =>
-                      !isPendingSyncLead(lead) &&
-                      lead.status === stage.status
-                  );
+    <div className="sp-redesign">
+      {/* PIPELINE OVERVIEW */}
+      <section className="sp-overview">
+        <div className="sp-overview-heading">
+          <div>
+            <span className="sp-eyebrow">SALES WORKSPACE</span>
+            <h2>Pipeline overview</h2>
+            <p>Track your leads across every sales stage.</p>
+          </div>
 
-                  return (
-                    <section
-                      className="pipeline-column"
-                      key={stage.status}
-                    >
-                      <div className="pipeline-heading">
-                        <span className={`pipeline-dot ${stage.color}`} />
-                        <strong>{stage.status}</strong>
-                        <span className="pipeline-count">
-                          {stageLeads.length}
-                        </span>
-                      </div>
+          <div className="sp-total-badge">
+            <span className="sp-live-dot" />
+            {leads.filter(
+              (lead) => !isPendingSyncLead(lead)
+            ).length} confirmed leads
+          </div>
+        </div>
 
-                      {stageLeads.length === 0 ? (
-                        <p className="muted-text">No leads</p>
-                      ) : (
-                        stageLeads.map((lead, index) => (
-                          <article
-                            className="pipeline-card"
-                            key={leadId(lead) || index}
-                          >
-                            <strong>{lead.customerName}</strong>
-                            <p>{lead.companyName || "Individual customer"}</p>
-                            <span>
-                              {lead.interest || "No interest specified"}
-                            </span>
-                            <button
-                              className="btn btn-small btn-light"
-                              onClick={() => openEditLead(lead)}
-                              type="button"
-                            >
-                              Update lead
-                            </button>
-                          </article>
-                        ))
-                      )}
-                    </section>
-                  );
-                })}
+        <div className="sp-stage-strip">
+          {[
+            { status: "New", color: "blue" },
+            { status: "Contacted", color: "purple" },
+            { status: "Qualified", color: "orange" },
+            { status: "Proposal", color: "indigo" },
+            { status: "Won", color: "green" },
+            { status: "Lost", color: "red" },
+          ].map((stage) => {
+            const confirmed = leads.filter(
+              (lead) => !isPendingSyncLead(lead)
+            );
+
+            const count = confirmed.filter(
+              (lead) => lead.status === stage.status
+            ).length;
+
+            const percentage = confirmed.length
+              ? Math.round((count / confirmed.length) * 100)
+              : 0;
+
+            return (
+              <div
+                className={`sp-stage-tile sp-tile-${stage.color}`}
+                key={stage.status}
+              >
+                <div className="sp-tile-top">
+                  <span className="sp-tile-dot" />
+                  <span>{stage.status}</span>
+                </div>
+
+                <strong>{count}</strong>
+
+                <div className="sp-tile-track">
+                  <span style={{ width: `${percentage}%` }} />
+                </div>
+
+                <small>{percentage}% of leads</small>
               </div>
-            </>
-          )}
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ALL LEADS — ONE CONTINUOUS GRID */}
+      <section className="sp-all-leads">
+        <div className="sp-all-leads-heading">
+          <div>
+            <h2>All customer leads</h2>
+            <p>Open any lead to review or update its details.</p>
+          </div>
+
+          <span className="sp-record-count">
+            {leads.filter(
+              (lead) => !isPendingSyncLead(lead)
+            ).length} records
+          </span>
+        </div>
+
+        <div className="sp-leads-grid">
+          {leads
+            .filter((lead) => !isPendingSyncLead(lead))
+            .map((lead, index) => {
+              const stageColor = {
+                New: "blue",
+                Contacted: "purple",
+                Qualified: "orange",
+                Proposal: "indigo",
+                Negotiation: "orange",
+                Won: "green",
+                Lost: "red",
+              }[lead.status] || "blue";
+
+              return (
+                <article
+                  className="sp-deal-card"
+                  key={leadId(lead) || index}
+                >
+                  <div className="sp-deal-top">
+                    <div className="sp-deal-avatar">
+                      {(lead.customerName || "C")
+                        .trim()
+                        .charAt(0)
+                        .toUpperCase()}
+                    </div>
+
+                    <span
+                      className={`sp-deal-status sp-status-${stageColor}`}
+                    >
+                      {lead.status || "New"}
+                    </span>
+                  </div>
+
+                  <h3>{lead.customerName || "Unnamed customer"}</h3>
+
+                  <p className="sp-deal-company">
+                    {lead.companyName || "Individual customer"}
+                  </p>
+
+                  <div className="sp-deal-divider" />
+
+                  <div className="sp-deal-detail">
+                    <span>Product / Interest</span>
+                    <strong>
+                      {lead.interest || "Not specified"}
+                    </strong>
+                  </div>
+
+                  {lead.followUpDate && (
+                    <div className="sp-deal-followup">
+                      <span>◷</span>
+                      Follow-up: {lead.followUpDate}
+                    </div>
+                  )}
+
+                  <button
+                    className="sp-deal-update"
+                    onClick={() => openEditLead(lead)}
+                    type="button"
+                  >
+                    View & update lead <span>→</span>
+                  </button>
+                </article>
+              );
+            })}
+        </div>
+
+        {leads.filter(
+          (lead) => !isPendingSyncLead(lead)
+        ).length === 0 && (
+          <div className="sp-no-leads">
+            <span>＋</span>
+            <h3>No confirmed leads yet</h3>
+            <p>Your synced customer leads will appear here.</p>
+          </div>
+        )}
+      </section>
+
+      <p className="sp-pipeline-note">
+        <span className="sp-live-dot" />
+        Showing confirmed leads. Offline changes appear here after syncing.
+      </p>
+    </div>
+  </>
+)}
+
 
           {activePage === "health" && (
             <>
@@ -2096,6 +2181,20 @@ const sendFollowUpEmail = async (lead) => {
                                 ? "Recovery failed"
                                 : "Email service operational"}
                     </span>
+
+                    <div className="email-mini-progress-track">
+                    <div
+                      className={`email-mini-progress-fill ${
+                        emailRecovery.stage === "detected" ||
+                        emailRecovery.stage === "failed"
+                          ? "is-failed"
+                          : emailRecovery.stage === "diagnosed" ||
+                              emailRecovery.stage === "recovering"
+                            ? "is-recovering"
+                            : "is-healthy"
+                      }`}
+                    />
+                  </div>
                   </div>
 
                   <p className="muted-text">
@@ -2216,7 +2315,42 @@ const sendFollowUpEmail = async (lead) => {
   </p>
 </article>
 
-              </div>
+
+               </div>
+                {/* API RECOVERY CARD — YAHAN ADD KIYA */}
+              <section className="api-recovery-wide-card">
+                <div className="api-recovery-wide-content">
+                  <div className="api-recovery-wide-icon">API</div>
+
+                  <div className="api-recovery-wide-details">
+                    <StatusBadge
+                      value={
+                        apiRecovery.status === "Recovering"
+                          ? "Recovering"
+                          : "Healthy"
+                      }
+                    />
+
+                    <h2>API Recovery</h2>
+                    <p>
+                      Detect API failures, diagnose the issue, and let
+                      PatchPilot automatically restore API availability.
+                    </p>
+
+                    <span className="muted-text">
+                      Endpoint: GET /api/leads
+                    </span>
+                  </div>
+
+                  <button
+                    className="btn btn-primary api-recovery-wide-button"
+                    type="button"
+                    onClick={() => setActivePage("apiRecovery")}
+                  >
+                    Open API Recovery →
+                  </button>
+                </div>
+              </section>
 
               <section className="panel section-gap">
                 <div className="panel-heading">
@@ -2343,6 +2477,129 @@ const sendFollowUpEmail = async (lead) => {
                   Inject Email Failure
                 </button>
               </section>
+                    
+{/* UNRECOVERABLE FAILURE TEST */}
+<section
+  className="panel section-gap"
+  style={{
+    border: "1px solid #fecaca",
+    background: "#fffafa"
+  }}
+>
+  <div className="panel-heading">
+    <div>
+      <h2 style={{ color: "#b91c1c" }}>
+        Unrecoverable Failure Test
+      </h2>
+      <p>
+        Test a failure that PatchPilot can diagnose but cannot automatically recover.
+      </p>
+    </div>
+
+    <StatusBadge value="Unrecovered" />
+  </div>
+
+  <p>
+    <strong>Scenario:</strong> Trusted backup unavailable.
+    This controlled test does not modify customer leads or the database.
+  </p>
+
+  <button
+    className="btn btn-primary"
+    type="button"
+    disabled={unrecoverableBusy}
+    onClick={async () => {
+      setUnrecoverableBusy(true);
+
+      try {
+        const response = await fetch(
+          "/api/system/unrecoverable-chaos",
+          { method: "POST" }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(
+            result.message || "Could not run failure test."
+          );
+        }
+
+        setUnrecoverableIncident(result.incident);
+        setIncidents(previous => [
+          result.incident,
+          ...previous.filter(
+            item => item.id !== result.incident.id
+          )
+        ]);
+
+        notify("Failure diagnosed. Automatic recovery is unavailable.");
+      } catch (error) {
+        notify(error.message || "Failure test could not run.");
+      } finally {
+        setUnrecoverableBusy(false);
+      }
+    }}
+  >
+    {unrecoverableBusy
+      ? "Injecting Failure..."
+      : "Inject Unrecoverable Failure"}
+  </button>
+
+  {unrecoverableIncident && (
+    <div
+      style={{
+        marginTop: 18,
+        padding: 16,
+        border: "1px solid #fca5a5",
+        borderRadius: 10,
+        background: "#fef2f2",
+        color: "#7f1d1d"
+      }}
+    >
+      <h3 style={{ marginTop: 0 }}>
+        🔴 UNRECOVERED — Recovery Blocked
+      </h3>
+
+      <p>
+        <strong>Incident ID:</strong>{" "}
+        {unrecoverableIncident.id}
+      </p>
+
+      <p>
+        <strong>Failure:</strong>{" "}
+        {unrecoverableIncident.type}
+      </p>
+
+      <p>
+        <strong>Detected:</strong>{" "}
+        {unrecoverableIncident.detectedAt
+          ? new Date(
+              unrecoverableIncident.detectedAt
+            ).toLocaleString()
+          : "—"}
+      </p>
+
+      <p>
+        <strong>Diagnosed:</strong>{" "}
+        {unrecoverableIncident.diagnosedAt
+          ? new Date(
+              unrecoverableIncident.diagnosedAt
+            ).toLocaleString()
+          : "—"}
+      </p>
+
+      <p>
+        <strong>Reason:</strong>{" "}
+        {unrecoverableIncident.reason}
+      </p>
+
+      <p>
+        <strong>Recovery time:</strong> Not recovered
+      </p>
+    </div>
+  )}
+</section>
 
             </>
           )}
@@ -2404,7 +2661,7 @@ const sendFollowUpEmail = async (lead) => {
                   </div>
                 </article>
               </div>
-
+                
               <section className="panel update-release-panel section-gap">
                 <div className="update-release-copy">
                   <span className="eyebrow">RELEASE MANAGEMENT</span>
@@ -2478,6 +2735,266 @@ const sendFollowUpEmail = async (lead) => {
               </div>
             </>
           )}
+
+          
+{activePage === "apiRecovery" && (
+  <>
+    <PageHeader
+      title="SaleSphere API Recovery"
+      subtitle="Detect API failures, restore availability and verify recovery automatically."
+      action={
+        <button
+          className="btn btn-light"
+          type="button"
+          onClick={() => setActivePage("health")}
+        >
+          ← Health Monitor
+        </button>
+      }
+    />
+
+    <div className="health-grid health-monitor-grid">
+      {/* API STATUS */}
+      <article className="health-card">
+        <div className="panel-heading">
+          <div>
+            <h2>API Status</h2>
+            <p>Live endpoint health</p>
+          </div>
+          <StatusBadge
+            value={
+              apiRecovery.stage === "recovered"
+                ? "Healthy"
+                : apiRecovery.status
+            }
+          />
+        </div>
+
+        <p className="muted-text">Endpoint: GET /api/leads</p>
+
+        <div className="system-overview-row">
+          <span>Current stage</span>
+          <strong>{apiRecovery.stage || "idle"}</strong>
+        </div>
+
+        <p>{apiRecovery.message || "API is operating normally."}</p>
+
+        <p className="muted-text">
+          Incident: {apiRecovery.incidentId || "No active incident"}
+        </p>
+      </article>
+
+      {/* PATCHPILOT RECOVERY WORKFLOW */}
+      <article className="health-card">
+        <h2>PatchPilot Recovery</h2>
+        <p className="muted-text">
+          Failure detection and automatic recovery progress.
+        </p>
+
+        {[
+          { id: "detected", label: "Failure detected" },
+          {
+            id: "recovery_in_progress",
+            label: "Automatic recovery in progress",
+          },
+          { id: "recovered", label: "Recovery completed" },
+        ].map((step, index) => {
+          const order = [
+            "idle",
+            "detected",
+            "recovery_in_progress",
+            "recovered",
+          ];
+
+          const currentIndex = order.indexOf(apiRecovery.stage || "idle");
+          const stepIndex = index + 1;
+
+          const complete =
+            apiRecovery.stage === "recovered" ||
+            currentIndex >= stepIndex;
+
+          const active =
+            apiRecovery.stage === step.id;
+
+          return (
+            <div
+              key={step.id}
+              className="system-overview-row"
+              style={{
+                padding: "13px 0",
+                borderBottom: "1px solid #e2e8f0",
+                gap: "12px",
+              }}
+            >
+              <span>
+                {complete ? "✓" : active ? "●" : "○"} {step.label}
+              </span>
+
+              <strong>
+                {complete
+                  ? "Done"
+                  : active
+                    ? "Active"
+                    : "Waiting"}
+              </strong>
+            </div>
+          );
+        })}
+
+        <button
+          className="btn btn-primary"
+          type="button"
+          disabled={apiRecoveryBusy}
+          onClick={async () => {
+            if (apiRecoveryBusy) return;
+
+            setApiRecoveryBusy(true);
+
+            const readJson = async (response) => {
+              const contentType =
+                response.headers.get("content-type") || "";
+
+              if (!contentType.includes("application/json")) {
+                throw new Error(
+                  "API returned HTML instead of JSON. Check the Vite proxy and backend server."
+                );
+              }
+
+              return response.json();
+            };
+
+            try {
+              const response = await fetch(
+                "/api/system/api-failure",
+                { method: "POST" }
+              );
+
+              const result = await readJson(response);
+
+              if (!response.ok) {
+                throw new Error(
+                  result.error || "Could not start API failure test."
+                );
+              }
+
+              let finalStatus = null;
+
+              
+              for (let i = 0; i < 24; i++) {
+                const statusResponse = await fetch(
+                  "/api/system/api-recovery-status",
+                  { cache: "no-store" }
+                );
+
+                const data = await readJson(statusResponse);
+
+                if (!statusResponse.ok) {
+                  throw new Error(
+                    data.error || "Could not read recovery status."
+                  );
+                }
+
+                finalStatus = data;
+                setApiRecovery(data);
+
+                if (data.stage === "recovered") {
+                  break;
+                }
+
+                await new Promise((resolve) =>
+                  setTimeout(resolve, 500)
+                );
+              }
+
+              if (!finalStatus || finalStatus.stage !== "recovered") {
+                throw new Error(
+                  "Recovery was not confirmed before the monitoring timeout. Refresh the status and check the backend."
+                );
+              }
+
+              // Verify that the real leads endpoint responds again.
+              const verify = await fetch("/api/leads", {
+                cache: "no-store",
+              });
+
+              if (!verify.ok) {
+                throw new Error(
+                  `Recovery stage completed, but API verification failed (HTTP ${verify.status}).`
+                );
+              }
+
+              const contentType =
+                verify.headers.get("content-type") || "";
+
+              if (!contentType.includes("application/json")) {
+                throw new Error(
+                  "The leads endpoint responded, but did not return JSON."
+                );
+              }
+
+              setApiRecovery({
+                ...finalStatus,
+                status: "Healthy",
+                message:
+                  "Verified: GET /api/leads is responding successfully after PatchPilot recovery.",
+              });
+
+            } catch (error) {
+              setApiRecovery((previous) => ({
+                ...previous,
+                message: error.message || "API recovery test failed.",
+              }));
+            } finally {
+              setApiRecoveryBusy(false);
+            }
+          }}
+        >
+          {apiRecoveryBusy
+            ? "PatchPilot is recovering..."
+            : "Simulate API Failure"}
+        </button>
+
+        {apiRecoveryBusy && (
+          <p className="muted-text">
+            Monitoring failure detection, recovery and API verification...
+          </p>
+        )}
+      </article>
+
+      {/* INCIDENT HISTORY */}
+      <article className="health-card">
+        <h2>Incident History</h2>
+        <p className="muted-text">
+          Recorded API recovery attempts from the backend.
+        </p>
+
+        {!apiRecovery.incidents ||
+        apiRecovery.incidents.length === 0 ? (
+          <p>No incidents yet. Run a test to begin.</p>
+        ) : (
+          apiRecovery.incidents.map((item) => (
+            <div
+              key={item.id}
+              style={{
+                padding: "12px 0",
+                borderBottom: "1px solid #e2e8f0",
+              }}
+            >
+              <strong>{item.id}</strong>
+              <p>{item.type}</p>
+              <StatusBadge value={item.status} />
+              <p className="muted-text">
+                {item.recoveryTimeMs == null
+                  ? "Recovery time not recorded"
+                  : `Recovery time: ${(item.recoveryTimeMs / 1000).toFixed(1)} sec`}
+              </p>
+            </div>
+          ))
+        )}
+      </article>
+    </div>
+  </>
+)}
 
           {activePage === "offlineLeads" && (
             <>
@@ -2567,6 +3084,7 @@ const sendFollowUpEmail = async (lead) => {
                         recovery.
                       </p>
                     </div>
+                    {/* yha add kru  */}
                     <StatusBadge value={recoveryMode} />
                   </div>
 

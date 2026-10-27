@@ -226,7 +226,6 @@ async function recoverToStable(incident) {
     return true;
 }
 
-// Controller homepage
 app.get("/", (req, res) => {
     res.send(`
       <!doctype html>
@@ -294,7 +293,6 @@ app.get("/", (req, res) => {
     `);
 });
 
-// Current release and health
 app.get("/api/status", async (req, res) => {
     res.json({
         controller: "PatchPilot",
@@ -305,12 +303,10 @@ app.get("/api/status", async (req, res) => {
     });
 });
 
-// Incident history
 app.get("/api/incidents", (req, res) => {
     res.json([...incidents].reverse());
 });
 
-// Controlled failure -> automatic rollback -> health verification
 app.post("/api/test-rollback", async (req, res) => {
     if (busy) {
         return res.status(409).json({
@@ -355,7 +351,6 @@ app.post("/api/test-rollback", async (req, res) => {
                 "Candidate passed its health check. Verify the failure condition in releases/1.1.0/server.js."
             );
 
-            // Restore the stable release even if the test did not fail.
             const recovered = await recoverToStable(incident);
 
             return res.status(500).json({
@@ -435,7 +430,6 @@ app.post("/api/test-rollback", async (req, res) => {
     }
 });
 
-// Start controller AND launch stable SaleSphere automatically
 app.listen(PORT, async () => {
     console.log(`PatchPilot running at http://localhost:${PORT}`);
     console.log(`SaleSphere managed app uses port ${APP_PORT}`);

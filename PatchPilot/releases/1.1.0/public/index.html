@@ -898,13 +898,11 @@ function getLeadPriority(lead) {
         }
     }
 
-    // New leads may need their first contact.
     if (status === "New") {
         score += 1;
         reasons.push("Awaiting first contact");
     }
 
-    // Negotiation indicates an active sales opportunity.
     if (status === "Negotiation") {
         score += 1;
         reasons.push("Active negotiation");

@@ -32,9 +32,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
 
-// ==================================================
-// LOCAL DATA FILES
-// ==================================================
+
 
 const dataFolder = path.join(__dirname, "data");
 
@@ -177,9 +175,6 @@ function savePendingEmailOperations() {
     }
 }
 
-// ==================================================
-// DATABASE AND CACHE HELPERS
-// ==================================================
 
 function isMongoAvailable() {
     return mongoose.connection.readyState === 1;
@@ -261,9 +256,7 @@ function getConfirmedCachedLeads() {
     });
 }
 
-// ==================================================
-// INCIDENT AND VERSION STATE
-// ==================================================
+
 
 let versionState = {
     currentVersion: stableVersion,
@@ -433,9 +426,6 @@ async function syncPendingLeadOperations() {
     }
 }
 
-// ==================================================
-// HOME AND HEALTH ENDPOINTS
-// ==================================================
 
 app.get("/", (req, res) => {
     res.sendFile(
@@ -462,10 +452,6 @@ app.get("/readyz", (req, res) => {
         ready: connected
     });
 });
-
-// ==================================================
-// VERSION MANAGER
-// ==================================================
 
 app.get("/api/system/version", (req, res) => {
     res.set("Cache-Control", "no-store");
@@ -549,6 +535,60 @@ app.post("/api/system/version/chaos", (req, res) => {
     });
 });
 
+app.post("/api/system/unrecoverable-chaos", (req, res) => {
+    const now = new Date().toISOString();
+
+    const incident = {
+        id: `LIMIT-${Date.now()}`,
+        type: "Trusted Backup Unavailable",
+        status: "unrecovered",
+        startedAt: now,
+        detectedAt: now,
+        diagnosedAt: null,
+        actionAt: null,
+        recoveredAt: null,
+        detectionTimeMs: 0,
+        recoveryTimeMs: null,
+        recoveryAvailable: false,
+        reason: "No trusted backup is available to restore the affected component.",
+        events: []
+    };
+
+    incidents.push(incident);
+
+    addIncidentEvent(
+        incident,
+        "Detected",
+        "PatchPilot detected a simulated unrecoverable failure."
+    );
+
+    incident.diagnosedAt = new Date().toISOString();
+
+    addIncidentEvent(
+        incident,
+        "Diagnosed",
+        "Diagnosis complete: no trusted backup is available."
+    );
+
+    incident.actionAt = new Date().toISOString();
+
+    addIncidentEvent(
+        incident,
+        "Recovery Blocked",
+        "Automatic recovery was safely stopped because a trusted backup is unavailable. No customer data was changed."
+    );
+
+    incident.updatedAt = new Date().toISOString();
+
+    saveIncidents();
+
+    return res.status(201).json({
+        success: true,
+        message: "Failure diagnosed. Automatic recovery is unavailable.",
+        incident
+    });
+});
+
 app.get("/api/system/incidents", (req, res) => {
     res.set("Cache-Control", "no-store");
 
@@ -561,9 +601,6 @@ app.get("/api/system/incidents", (req, res) => {
     });
 });
 
-// ==================================================
-// VERSION SELF-HEALING WATCHDOG
-// ==================================================
 
 setInterval(() => {
     const incident = incidents.find(
@@ -575,7 +612,7 @@ setInterval(() => {
         return;
     }
 
-    // 1. Detect failure
+
     if (!incident.detectedAt) {
         incident.detectedAt = new Date().toISOString();
 
@@ -595,7 +632,7 @@ setInterval(() => {
         return;
     }
 
-    // 2. Diagnose failure
+   
     if (!incident.diagnosedAt) {
         incident.diagnosedAt = new Date().toISOString();
 
@@ -628,7 +665,7 @@ setInterval(() => {
         return;
     }
 
-    // 4. Verify recovery
+    
     if (!incident.recoveredAt) {
         const versionRestored =
             versionState.currentVersion ===
@@ -663,10 +700,6 @@ setInterval(() => {
         saveIncidents();
     }
 }, 1000);
-
-// ==================================================
-// LEAD VALIDATION HELPERS
-// ==================================================
 
 function prepareFollowUpDate(value) {
     if (
@@ -760,11 +793,7 @@ function isValidationError(error) {
         ["ValidationError", "CastError"].includes(error.name)
     );
 }
-
-// ==================================================
-// CREATE LEAD
-// ==================================================
-
+// create lead
 app.post("/api/leads", async (req, res) => {
     let leadData;
 
@@ -776,7 +805,6 @@ app.post("/api/leads", async (req, res) => {
         });
     }
 
-    // If database is connected, save directly to MongoDB.
     if (isMongoAvailable()) {
         try {
             const lead = await Lead.create(leadData);
@@ -808,7 +836,7 @@ app.post("/api/leads", async (req, res) => {
         }
     }
 
-    // Database offline: save locally and queue for later.
+   
     try {
         const id =
             new mongoose.Types.ObjectId().toString();
@@ -848,14 +876,84 @@ app.post("/api/leads", async (req, res) => {
     }
 });
 
-// ==================================================
-// CUSTOMER LEADS
-// CONFIRMED DATABASE RECORDS ONLY
-// ==================================================
+// rcovry
+const apiRecoveryState = {
+    status: "Healthy",
+    stage: "idle",
+    message: "API is operating normally.",
+    incidentId: null,
+    failureUntil: 0,
+    incidents: []
+};
+
+app.get("/api/system/api-recovery-status", (req, res) => {
+    res.set("Cache-Control", "no-store");
+    res.json({
+        status: apiRecoveryState.status,
+        stage: apiRecoveryState.stage,
+        message: apiRecoveryState.message,
+        incidentId: apiRecoveryState.incidentId,
+        incidents: [...apiRecoveryState.incidents].reverse().slice(0, 10)
+    });
+});
+
+app.post("/api/system/api-failure", (req, res) => {
+    if (apiRecoveryState.status === "Recovering") {
+        return res.status(409).json({
+            success: false,
+            error: "API recovery test is already running."
+        });
+    }
+
+    const incident = {
+        id: "API-" + Date.now(),
+        type: "API Failure Recovery",
+        status: "Recovering",
+        startedAt: new Date().toISOString(),
+        recoveredAt: null,
+        recoveryTimeMs: null
+    };
+
+    apiRecoveryState.incidentId = incident.id;
+    apiRecoveryState.status = "Recovering";
+    apiRecoveryState.stage = "detected";
+    apiRecoveryState.message = "API failure detected. PatchPilot is diagnosing.";
+    apiRecoveryState.failureUntil = Date.now() + 7000;
+    apiRecoveryState.incidents.push(incident);
+
+    setTimeout(() => {
+        if (apiRecoveryState.incidentId !== incident.id) return;
+        apiRecoveryState.stage = "recovery_in_progress";
+        apiRecoveryState.message = "PatchPilot is restoring API availability.";
+    }, 1800);
+
+    setTimeout(() => {
+        if (apiRecoveryState.incidentId !== incident.id) return;
+        apiRecoveryState.failureUntil = 0;
+        apiRecoveryState.status = "Healthy";
+        apiRecoveryState.stage = "recovered";
+        apiRecoveryState.message = "API recovery completed. Verification is ready.";
+        incident.status = "Recovered";
+        incident.recoveredAt = new Date().toISOString();
+        incident.recoveryTimeMs = Date.now() - Number(incident.id.slice(4));
+    }, 7000);
+
+    return res.status(202).json({
+        success: true,
+        incidentId: incident.id,
+        message: "Controlled API failure injected."
+    });
+});
 
 app.get("/api/leads", async (req, res) => {
     res.set("Cache-Control", "no-store");
 
+    if (Date.now() < apiRecoveryState.failureUntil) {
+        return res.status(503).json({
+            error: "Controlled API failure. PatchPilot recovery is in progress.",
+            incidentId: apiRecoveryState.incidentId
+        });
+    }
     try {
         const pendingCreateIds = getPendingCreateIds();
         const pendingDeleteIds = getPendingDeleteIds();
@@ -881,8 +979,7 @@ app.get("/api/leads", async (req, res) => {
             return res.json(confirmedLeads);
         }
 
-        // Database offline: only previously confirmed cached leads.
-        // A locally queued create must never appear here.
+        
         const confirmedCachedLeads =
             getConfirmedCachedLeads();
 
@@ -901,10 +998,7 @@ app.get("/api/leads", async (req, res) => {
     }
 });
 
-// ==================================================
-// OFFLINE LEADS
-// PENDING OPERATIONS ONLY
-// ==================================================
+
 
 app.get("/api/leads/offline", (req, res) => {
     const pendingLeads = new Map();
@@ -1042,10 +1136,7 @@ app.put("/api/leads/:id", async (req, res) => {
     });
 });
 
-// ==================================================
-// CUSTOMER ACTIVITIES
-// ==================================================
-
+// cst Activity
 app.post(
     "/api/leads/:id/activities",
     async (req, res) => {
@@ -1126,11 +1217,7 @@ app.post(
         }
     }
 );
-
-// ==================================================
-// DELETE LEAD
-// ==================================================
-
+// delete
 app.delete("/api/leads/:id", async (req, res) => {
     const leadId = String(req.params.id);
 
@@ -1192,17 +1279,13 @@ app.delete("/api/leads/:id", async (req, res) => {
     });
 });
 
-// ==================================================
-// DATABASE STATUS AND CACHE
-// ==================================================
-
+//  db Cache 
 app.get(
     "/api/system/data-status",
     async (req, res) => {
         const connected = isMongoAvailable();
 
-        // Do not overwrite the local cache with unconfirmed
-        // pending data while operations are waiting for sync.
+        
         if (
             connected &&
             pendingLeadOperations.length === 0
@@ -1241,9 +1324,6 @@ app.get(
     }
 );
 
-// ==================================================
-// DATABASE CHAOS / SELF-HEALING DEMO
-// ==================================================
 
 app.post(
     "/api/system/database/chaos",
@@ -1409,10 +1489,8 @@ async function verifyMongoRecovery() {
             );
         }
 
-        // Verify that MongoDB can respond to a real query.
         await Lead.countDocuments();
 
-        // Drain the queue before declaring recovery successful.
         if (pendingLeadOperations.length > 0) {
             await syncPendingLeadOperations();
         }
@@ -1423,7 +1501,6 @@ async function verifyMongoRecovery() {
             );
         }
 
-        // Refresh the cache with database-confirmed records.
         cachedLeads = await Lead.find()
             .sort({ createdAt: -1 })
             .lean();
@@ -1466,7 +1543,7 @@ async function verifyMongoRecovery() {
             );
         }
 
-        // Keep the incident active so the watchdog can retry.
+        
     } finally {
         recoveryVerificationRunning = false;
     }
@@ -1483,7 +1560,7 @@ async function connectMongoDB() {
     isConnecting = true;
 
     try {
-        // Respect the intentional demo failure delay.
+        
         const remainingChaosDelay = Math.max(
             0,
             chaosModeUntil - Date.now()
@@ -1518,7 +1595,7 @@ async function connectMongoDB() {
             await syncPendingLeadOperations();
         }
 
-        // Verify the incident only after the queue is drained.
+        
         if (
             activeMongoIncidentId &&
             pendingLeadOperations.length === 0
@@ -1526,8 +1603,7 @@ async function connectMongoDB() {
             await verifyMongoRecovery();
         }
 
-        // Refresh confirmed cache only when there is no
-        // remaining offline queue.
+        
         if (
             pendingLeadOperations.length === 0 &&
             !activeMongoIncidentId &&
@@ -1545,7 +1621,7 @@ async function connectMongoDB() {
             error.message
         );
     } finally {
-        // IMPORTANT: release the lock BEFORE scheduling retry.
+        
         isConnecting = false;
 
         if (!isMongoAvailable()) {
@@ -1570,15 +1646,7 @@ async function connectMongoDB() {
         }
     }
 }
-// ==================================================
-// EMAIL SERVICE SELF-HEALING DEMO
-// ==================================================
 
-/* EMAIL SERVICE SELF-HEALING */
-
-
-
-/* EMAIL SERVICE SELF-HEALING */
 let simulateNextEmailFailure = false;
 
 const emailRecoveryState = {
@@ -1652,7 +1720,7 @@ async function sendEmailWithSelfHealing(mailOptions) {
 
         console.log(`[PatchPilot] ${incidentId}: Failure detected.`);
 
-        await emailWait(1000);
+        await emailWait(300);
 
         emailRecoveryState.stage = "diagnosed";
         emailRecoveryState.message =
@@ -1660,7 +1728,7 @@ async function sendEmailWithSelfHealing(mailOptions) {
 
         console.log(`[PatchPilot] ${incidentId}: Diagnosed.`);
 
-        await emailWait(1000);
+        await emailWait(300);
 
         emailRecoveryState.status = "Recovering";
         emailRecoveryState.stage = "recovering";
@@ -1669,14 +1737,6 @@ async function sendEmailWithSelfHealing(mailOptions) {
 
         console.log(`[PatchPilot] ${incidentId}: Recovery started.`);
 
-        // Keep total recovery time around 30 seconds.
-        await emailWait(
-            Math.max(0, 25000 - (Date.now() - startedAt))
-        );
-
-
-        // The injected one-time fault has been cleared.
-        // Send the actual email and only mark green on success.
         await emailTransporter.sendMail(mailOptions);
 
         Object.assign(emailRecoveryState, {
@@ -1708,9 +1768,6 @@ async function sendEmailWithSelfHealing(mailOptions) {
     }
 }
 
-// ==================================================
-// SEND FOLLOW-UP EMAIL
-// ==================================================
 
 app.post("/api/followups/:leadId/send-email", async (req, res) => {
     try {
@@ -1810,9 +1867,6 @@ mongoose.connection.on("connected", () => {
     console.log("MongoDB connection established.");
 });
 
-// ==================================================
-// AUTOMATIC SYNC AND RECOVERY WATCHDOG
-// ==================================================
 
 setInterval(async () => {
     if (!isMongoAvailable()) {
@@ -1831,16 +1885,13 @@ setInterval(async () => {
     }
 }, 3000);
 
-// If disconnected and no reconnect timer exists, schedule a retry.
+
 setInterval(() => {
     if (!isMongoAvailable()) {
         scheduleReconnect();
     }
 }, 5000);
 
-// ==================================================
-// START SERVER
-// ==================================================
 
 console.log(
     "MongoDB URI configured:",
